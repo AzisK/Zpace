@@ -3,7 +3,7 @@ import os
 import shutil
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from tqdm import tqdm
 
@@ -100,7 +100,7 @@ def should_skip_directory(dirpath: Path) -> bool:
     return any(path_str.startswith(skip) for skip in SKIP_DIRS)
 
 
-def identify_special_dir(dirpath: Path) -> str | None:
+def identify_special_dir(dirpath: Path) -> Optional[str]:
     """
     Check if directory is a special type that should be treated as atomic unit.
     Returns category name if special, None otherwise.
