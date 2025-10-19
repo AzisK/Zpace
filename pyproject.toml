@@ -1,0 +1,44 @@
+[project]
+name = "zpace"
+version = "0.1.0"
+description = "A CLI tool to discover what's consuming your disk space"
+readme = "README.md"
+requires-python = ">=3.13"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "Ąžuolas Krušna", email = "azuolas.krusna@yahoo.com" }
+]
+keywords = ["disk", "storage", "analyze", "cli", "space", "cleanup", "file"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: Apache-2.0 License",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Filesystems",
+    "Topic :: Utilities",
+]
+
+dependencies = [
+    "argparse>=1.4.0",
+    "tqdm>=4.67.1",
+]
+
+[project.scripts]
+space = "main:main"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.1",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
