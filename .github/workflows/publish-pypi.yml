@@ -13,6 +13,15 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Validate version matches tag
+        run: |
+            PYPROJECT_VERSION=$(grep '^version = ' pyproject.toml | cut -d'"' -f2)
+            TAG_VERSION=${GITHUB_REF#refs/tags/v}
+            if [ "$PYPROJECT_VERSION" != "$TAG_VERSION" ]; then
+            echo "Version mismatch: pyproject.toml ($PYPROJECT_VERSION) != tag ($TAG_VERSION)"
+            exit 1
+            fi
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
