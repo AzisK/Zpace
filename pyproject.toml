@@ -32,6 +32,10 @@ dependencies = [
     "tqdm>=4.67.1",
 ]
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project.scripts]
 space = "main:main"
 
