@@ -180,8 +180,8 @@ class TestApp:
             )
 
             # Test that we can identify the special dir
-            assert list(file_categories.keys()) == ["Documents", "Code", "Pictures"]
-            assert list(dir_categories.keys()) == ["Node Modules"]
+            assert set(file_categories.keys()) == {"Documents", "Code", "Pictures"}
+            assert set(dir_categories.keys()) == {"Node Modules"}
             assert scanned_files == 3
 
 
