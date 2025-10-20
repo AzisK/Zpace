@@ -4,7 +4,7 @@
 
 set -e
 
-VERSIONS=("3.9" "3.10" "3.11" "3.12" "3.13")
+VERSIONS=("3.9" "3.10" "3.11" "3.12" "3.13" "3.14")
 
 echo "🧪 Testing Space across Python versions..."
 echo "💡 Note: For full CI, push to GitHub (uses Actions)"
@@ -29,13 +29,27 @@ for version in "${VERSIONS[@]}"; do
         uv python install "$version"
     fi
 
+    # Create and activate virtual environment for this version
+    venv_dir="venvs/.venv$version"
+    echo "Creating virtual environment in $venv_dir..."
+    uv venv --python "$version" "$venv_dir"
+    source "$venv_dir/bin/activate"
+
+    # Print the active Python version and environment path
+    echo "Active Python version:"
+    python --version
+    echo "Active virtual environment path:"
+    echo "$VIRTUAL_ENV"
+    echo "Python interpreter path:"
+    which python
+
     # Run tests with this version
     echo "Running tests..."
-    uv run --python "$version" pytest test_main.py -v
+    uv run --active pytest test_main.py -v
 
     # Quick smoke test
     echo "Testing CLI..."
-    uv run --python "$version" python main.py --help > /dev/null
+    uv run --active python main.py --help > /dev/null
 
     echo "✅ Python $version passed!"
     echo ""
