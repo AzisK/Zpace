@@ -1,4 +1,4 @@
-# Zpace 
+# Zpace
 
 A CLI tool to discover what's hogging your disk space!
 
@@ -32,9 +32,23 @@ zpace -m 1024
 zpace ~/Documents -n 15 -m 500
 ```
 
+### Tips
+
+```bash
+# Find all node_modules directories
+space ~ -n 50 | grep "node_modules"
+
+# Check what's in a specific directory
+space ~/.cache
+
+# Find largest files system-wide (requires sudo)
+sudo space / -n 20
+```
+
 ## Development
 
 ### Setup
+
 ```bash
 # Clone the repository
 git clone https://github.com/azisk/zpace.git
@@ -48,7 +62,9 @@ uv run python main.py
 ```
 
 ### Code Quality
+
 The project uses Ruff for linting, formatting, and import sorting:
+
 ```bash
 # Format code
 uv run ruff format
@@ -58,6 +74,19 @@ uv run ruff check
 
 # Fix auto-fixable issues
 uv run ruff check --fix
+
+# Run all pre-commit checks manually
+uv run pre-commit run --all-files
+```
+
+### Testing
+
+```bash
+# Run tests
+uv run pytest test_main.py -v
+
+# Test across multiple Python versions (optional)
+./testVersions.sh
 ```
 
 ### Project Structure
@@ -77,8 +106,8 @@ Apacha 2.0 License
 
 ### Support
 
-- 🐛 Report a bug
-- 💡 Request a feature
+- 🐛 [Report a bug](https://github.com/AzisK/Zpace/issues)
+- 💡 [Request a feature](https://github.com/AzisK/Zpace/issues)
 - ⭐ Star the repo if you find it useful!
 
 ---
