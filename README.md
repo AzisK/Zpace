@@ -39,7 +39,7 @@ zpace ~/Documents -n 15 -m 500
 zpace ~ -n 50 | grep "node_modules"
 
 # Check what's in a specific directory
-pace ~/.cache
+zpace ~/.cache
 
 # Find largest files system-wide (requires sudo)
 sudo zpace / -n 20
