@@ -36,13 +36,13 @@ zpace ~/Documents -n 15 -m 500
 
 ```bash
 # Find all node_modules directories
-space ~ -n 50 | grep "node_modules"
+zpace ~ -n 50 | grep "node_modules"
 
 # Check what's in a specific directory
-space ~/.cache
+pace ~/.cache
 
 # Find largest files system-wide (requires sudo)
-sudo space / -n 20
+sudo zpace / -n 20
 ```
 
 ## Development
