@@ -32,9 +32,6 @@ dependencies = [
     "tqdm>=4.67.1",
 ]
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
 
 [project.scripts]
 space = "main:main"
@@ -53,3 +50,7 @@ target-version = "py313"
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
