@@ -3,7 +3,7 @@ name = "zpace"
 version = "0.1.0"
 description = "A CLI tool to discover what's consuming your disk space"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.9"
 license = { text = "Apache-2.0" }
 authors = [
     { name = "Ąžuolas Krušna", email = "azuolas.krusna@yahoo.com" }
@@ -17,7 +17,12 @@ classifiers = [
     "License :: OSI Approved :: Apache-2.0 License",
     "Operating System :: MacOS",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: System :: Filesystems",
     "Topic :: Utilities",
 ]
