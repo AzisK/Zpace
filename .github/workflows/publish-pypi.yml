@@ -31,7 +31,7 @@ jobs:
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
       - name: Install dependencies from uv.lock
-        run: uv pip install --no-dev
+        run: uv sync --no-dev
 
       - name: Build package
         run: |
