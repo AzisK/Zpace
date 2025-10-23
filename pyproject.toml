@@ -34,7 +34,7 @@ dependencies = [
 
 
 [project.scripts]
-space = "main:main"
+zpace = "main:main"
 
 [dependency-groups]
 dev = [
