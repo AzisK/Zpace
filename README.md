@@ -4,7 +4,26 @@ A CLI tool to discover what's hogging your disk space!
 
 The tool shows the largest files in each category of files (videos, pictures, documents etc.) as well as the largest special directories as apps in MacOS, Python virtual environments, node_modules etc.
 
-It's built to indentify the biggest chunks of that could potentially up the space for something else.
+It's built to indentify the biggest chunks of data that could potentially free up the space for something else.
+
+## Features
+
+- 📊 Smart Categorization - Groups files by type (Documents, Videos, Code, Pictures, etc.)
+- 📦 Special Directory Detection - Identifies space-hungry directories like node_modules, .venv, .git, and build artifacts
+- 🎯 Actionable Insights - Shows deletable units to help you quickly free up space
+- ⚡ Fast Scanning - Efficient traversal with real-time progress tracking
+- 🔍 Sparse File Handling - Correctly reports actual disk usage for Docker images and other sparse files
+- 🎨 Clean Output - Organized and clear display with helpful statistics
+
+## Installation
+
+```bash
+uv tool install space
+```
+
+```bash
+pip install space
+```
 
 ## Usage
 
