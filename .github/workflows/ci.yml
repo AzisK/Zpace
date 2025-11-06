@@ -44,3 +44,15 @@ jobs:
       run: |
         uv run python main.py --help
         uv run python main.py . -n 5 -m 1000
+
+  mypy:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - run: |
+          pip install mypy
+          mypy .
