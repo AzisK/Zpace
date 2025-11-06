@@ -38,9 +38,12 @@ zpace = "main:main"
 
 [dependency-groups]
 dev = [
+    "mypy>=1.18.2",
     "pre-commit>=4.3.0",
+    "pyfakefs>=5.10.2",
     "pytest>=8.4.2",
     "ruff>=0.14.1",
+    "types-tqdm>=4.67.0.20250809",
 ]
 
 [tool.ruff]

@@ -27,6 +27,7 @@ SKIP_DIRS = {
     "/.DocumentRevisions-V100",
     "/.fseventsd",
 }
+DEEPEST_SKIP_DIRS_LEVEL = max(dirpath.count("/") for dirpath in SKIP_DIRS)
 CATEGORIES = {
     "Pictures": {
         ".jpg",
@@ -83,6 +84,7 @@ SPECIAL_DIRS = {
     "IDE Config": {".idea", ".vscode", ".vs", ".eclipse"},
     "Git Repos": {".git"},
 }
+PROGRESS_UPDATE_THRESHOLD = 10 * 1024 * 1024  # 10 MB
 
 
 def get_disk_usage(path):
@@ -90,30 +92,29 @@ def get_disk_usage(path):
     return total, used, free
 
 
-def categorize_file(filepath: Path) -> str:
-    ext = filepath.suffix.lower()
+def categorize_file(filepath: str) -> str:
+    suffix = "." + filepath.split(".")[-1].lower()
 
     for category, extensions in CATEGORIES.items():
-        if ext in extensions:
+        if suffix in extensions:
             return category
 
     return "Others"
 
 
-def should_skip_directory(dirpath: Path) -> bool:
-    path_str = str(dirpath)
-    return any(path_str.startswith(skip) for skip in SKIP_DIRS)
+def should_skip_directory(dirpath: str) -> bool:
+    return dirpath in SKIP_DIRS
 
 
-def identify_special_dir(dirpath: Path) -> Optional[str]:
+def identify_special_dir(dirpath: str) -> Optional[str]:
     """
     Check if directory is a special type that should be treated as atomic unit.
     Returns category name if special, None otherwise.
     """
-    dir_name = dirpath.name.lower()
+    dir_name = dirpath.split("/")[-1].lower()
 
     # Check for macOS .app bundles
-    if dirpath.suffix == ".app":
+    if dirpath.endswith(".app"):
         return "macOS Apps"
 
     # Check special directory names
@@ -124,7 +125,7 @@ def identify_special_dir(dirpath: Path) -> Optional[str]:
     return None
 
 
-def calculate_dir_size(dirpath: Path) -> int:
+def calculate_dir_size(dirpath: str) -> int:
     """
     Calculate total size of directory using os.scandir (efficient and portable).
     """
@@ -138,7 +139,7 @@ def calculate_dir_size(dirpath: Path) -> int:
                         stat.st_blocks * 512 if hasattr(stat, "st_blocks") else stat.st_size
                     )
                 elif entry.is_dir(follow_symlinks=False):
-                    total_size += calculate_dir_size(Path(entry.path))
+                    total_size += calculate_dir_size(entry.path)
 
             except (FileNotFoundError, PermissionError, OSError):
                 continue
@@ -150,7 +151,7 @@ def calculate_dir_size(dirpath: Path) -> int:
 
 def scan_files_and_dirs(
     path: Path, used: int, min_size: int = MIN_FILE_SIZE
-) -> Tuple[Dict[str, List[Tuple[int, Path]]], Dict[str, List[Tuple[int, Path]]], int, int]:
+) -> Tuple[Dict[str, List[Tuple[int, str]]], Dict[str, List[Tuple[int, str]]], int, int]:
     """
     Scan directory tree for files and special directories.
     Returns: (file_categories, dir_categories, total_files, total_size)
@@ -162,18 +163,21 @@ def scan_files_and_dirs(
     progress_update_buffer = 0
 
     with tqdm(total=used, unit="B", unit_scale=True, desc="Scanning") as pbar:
-        for root, dirs, files in os.walk(path, topdown=True):
-            root_path = Path(root)
+        for level, (root, dirs, files) in enumerate(os.walk(path, topdown=True)):
+            if level == 0:
+                root = root.rstrip("/")
+                starting_level = root.count("/")
 
             # Check subdirectories and handle special ones BEFORE descending
             dirs_to_remove = []
             for dirname in dirs:
-                dir_path = root_path / dirname
+                dir_path = f"{root}/{dirname}"
 
                 # Skip system directories
-                if should_skip_directory(dir_path):
-                    dirs_to_remove.append(dirname)
-                    continue
+                if starting_level < DEEPEST_SKIP_DIRS_LEVEL:
+                    if should_skip_directory(dir_path):
+                        dirs_to_remove.append(dirname)
+                        continue
 
                 # Check if this subdirectory is special
                 special_type = identify_special_dir(dir_path)
@@ -182,8 +186,8 @@ def scan_files_and_dirs(
                     dir_size = calculate_dir_size(dir_path)
                     if dir_size >= min_size:
                         dir_categories[special_type].append((dir_size, dir_path))
-                        scanned_size += dir_size
-                        progress_update_buffer += dir_size
+                    scanned_size += dir_size
+                    progress_update_buffer += dir_size
                     # Don't descend into it
                     dirs_to_remove.append(dirname)
 
@@ -193,13 +197,13 @@ def scan_files_and_dirs(
 
             # Process files in current directory
             for name in files:
-                filepath = root_path / name
+                filepath = f"{root}/{name}"
                 try:
-                    stat = filepath.stat()
+                    stat = os.stat(filepath)
                     size = stat.st_blocks * 512 if hasattr(stat, "st_blocks") else stat.st_size
 
                     if size >= min_size:
-                        category = categorize_file(filepath)
+                        category = categorize_file(name)
                         file_categories[category].append((size, filepath))
 
                     scanned_files += 1
@@ -207,7 +211,7 @@ def scan_files_and_dirs(
                     progress_update_buffer += size
 
                     # Update progress bar every 10MB to balance performance and accuracy
-                    if progress_update_buffer >= 10 * 1024 * 1024:
+                    if progress_update_buffer >= PROGRESS_UPDATE_THRESHOLD:
                         pbar.update(progress_update_buffer)
                         progress_update_buffer = 0
 
