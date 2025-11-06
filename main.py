@@ -10,11 +10,16 @@ from tqdm import tqdm
 MIN_FILE_SIZE = 100 * 1024  # 100 KB
 DEFAULT_TOP_N = 10
 SKIP_DIRS = {
+    # Linux
     "/dev",
     "/proc",
     "/sys",
     "/run",
     "/var/run",
+    "/snap",
+    "/boot",
+    "/lost+found",
+    # macOS
     "/System",
     "/Library",
     "/private/var",
