@@ -231,7 +231,7 @@ def get_top_n_per_category(
     return result
 
 
-def format_size(size: int) -> str:
+def format_size(size: float) -> str:
     for unit in ["B", "KB", "MB", "GB", "TB"]:
         if size < 1024:
             return f"{size:.2f} {unit}"
@@ -316,7 +316,7 @@ def main():
         return
 
     # Display disk usage
-    total, used, free = get_disk_usage(str(scan_path))
+    total, used, free = map(float, get_disk_usage(str(scan_path)))
     terminal_width = shutil.get_terminal_size().columns
 
     print("\n💾 Disk Usage")
