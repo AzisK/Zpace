@@ -62,5 +62,4 @@ jobs:
         run: uv sync
 
       - name: Type check with mypy
-        run: |
-          mypy .
+        run: uv run mypy .
