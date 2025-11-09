@@ -18,7 +18,8 @@ jobs:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14", "pypy3.9", "pypy3.10", "pypy3.11"]
 
     steps:
-    - uses: actions/checkout@v5
+    - name: Checkout repository
+      uses: actions/checkout@v5
 
     - name: Install uv
       uses: astral-sh/setup-uv@v7
@@ -29,7 +30,7 @@ jobs:
       run: uv python install ${{ matrix.python-version }}
 
     - name: Install dependencies
-      run: uv sync --all-extras --dev
+      run: uv sync
 
     - name: Run tests
       run: uv run pytest test_main.py -v
@@ -49,10 +50,17 @@ jobs:
     name: Type Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
         with:
-          python-version: "3.14"
-      - run: |
-          pip install mypy types-tqdm
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Type check with mypy
+        run: |
           mypy .

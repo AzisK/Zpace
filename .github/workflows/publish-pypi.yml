@@ -11,7 +11,8 @@ jobs:
     permissions:
         id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout repository
+        uses: actions/checkout@v5
 
       - name: Validate version matches tag
         run: |
@@ -22,13 +23,10 @@ jobs:
             exit 1
             fi
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
-
       - name: Install uv
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
 
       - name: Install dependencies from uv.lock
         run: uv sync --no-dev
