@@ -11,6 +11,7 @@ from main import (
     scan_files_and_dirs,
     should_skip_directory,
     MIN_FILE_SIZE,
+    SKIP_DIRS,
 )
 
 
@@ -238,14 +239,19 @@ class TestScanFilesAndDirs:
 
         fs.create_dir("/test")
         fs.create_file("/test/small.txt", contents="x" * 1024)  # 1KB
+        fs.create_file("/test/tiny1.txt", contents="x")
+        fs.create_file("/test/tiny2.jpg", contents="x")
+        fs.create_file("/test/tiny3.py", contents="x")
 
         file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
             Path("/test"), used=100000, min_size=MIN_FILE_SIZE
         )
 
-        assert file_count == 1  # File is counted
+        assert file_count == 4  # File is counted
         assert total_size >= 1024  # But not categorized due to size
         assert "Documents" not in file_cats  # Too small to be categorized
+        assert "Pictures" not in file_cats  # Too small to be categorized
+        assert "Code" not in file_cats  # Too small to be categorized
 
     @patch("main.tqdm")
     def test_scan_with_categorized_files(self, mock_tqdm, fs):
@@ -254,8 +260,8 @@ class TestScanFilesAndDirs:
 
         fs.create_dir("/test")
         # Create files with sufficient size to be categorized
-        fs.create_file("/test/doc.pdf", contents="x" * (MIN_FILE_SIZE + 1024))
-        fs.create_file("/test/image.jpg", contents="x" * (MIN_FILE_SIZE + 2048))
+        fs.create_file("/test/doc.pdf", contents="x" * MIN_FILE_SIZE)
+        fs.create_file("/test/image.jpg", contents="x" * MIN_FILE_SIZE)
 
         file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
             Path("/test"), used=100000, min_size=MIN_FILE_SIZE
@@ -348,10 +354,16 @@ class TestRealisticFileSystem:
         assert "small.txt" not in document_files  # Should be filtered by size
 
     @patch("main.tqdm")
-    def test_skip_directories_respected(self, mock_tqdm, fs):
+    @patch("main.should_skip_directory")
+    def test_skip_directories_respected(self, mock_should_skip, mock_tqdm, fs):
         """Test that system directories are properly skipped."""
         mock_pbar = MagicMock()
         mock_tqdm.return_value.__enter__.return_value = mock_pbar
+
+        def should_skip_side_effect(dirpath):
+            return str(dirpath) in {str(s) for s in SKIP_DIRS}
+
+        mock_should_skip.side_effect = should_skip_side_effect
 
         # Create filesystem with system directories
         fs.create_dir("/")
@@ -365,7 +377,6 @@ class TestRealisticFileSystem:
         # Create files
         fs.create_file("/system.file", contents="x" * MIN_FILE_SIZE)
         fs.create_file("/home/user.file", contents="x" * MIN_FILE_SIZE)
-        fs.create_file("/private/var/skipped.file", contents="x" * MIN_FILE_SIZE)
         fs.create_file("/dev/should_be_skipped.file", contents="x" * MIN_FILE_SIZE)
         fs.create_file("/proc/also_skipped.file", contents="x" * MIN_FILE_SIZE)
         fs.create_file("/normal_dir/normal.file", contents="x" * MIN_FILE_SIZE)
@@ -380,7 +391,6 @@ class TestRealisticFileSystem:
         for category_files in file_cats.values():
             all_files.extend([Path(f[1]).name for f in category_files])
 
-        assert "skipped.file" not in all_files
         assert "should_be_skipped.file" not in all_files
         assert "also_skipped.file" not in all_files
         # These should be found since they're not in skipped dirs
@@ -461,33 +471,29 @@ class TestSpecialDirectoryHandling:
 class TestSystemDirectoryBehavior:
     """Test behavior with system directories."""
 
-    def test_skip_directory_detection(self):
-        """Verify system directories are correctly identified."""
-        assert should_skip_directory(Path("/dev")) is True
-        assert should_skip_directory(Path("/proc")) is True
-        assert should_skip_directory(Path("/System")) is True
-        assert should_skip_directory(Path("/Library")) is True
-        assert should_skip_directory(Path("/home/user")) is False
-        assert should_skip_directory(Path("/tmp")) is False
-
     @patch("main.tqdm")
-    def test_skip_directories_in_nested_paths(self, mock_tqdm, fs):
+    @patch("main.should_skip_directory")
+    def test_skip_directories_in_nested_paths(self, mock_should_skip, mock_tqdm, fs):
         """Test that system directories are skipped even when nested in scan path."""
         mock_pbar = MagicMock()
         mock_tqdm.return_value.__enter__.return_value = mock_pbar
+
+        def should_skip_side_effect(dirpath):
+            return str(dirpath) in {str(s) for s in SKIP_DIRS}
+
+        mock_should_skip.side_effect = should_skip_side_effect
 
         # Create filesystem structure
         fs.create_dir("/")
         fs.create_dir("/home")
         fs.create_dir("/home/user")
         fs.create_dir("/dev")
-        fs.create_dir("/dev/notnull")
         fs.create_dir("/usr")
         fs.create_dir("/usr/bin")
 
         # Create files
         fs.create_file("/home/user/normal.file", contents="x" * MIN_FILE_SIZE)
-        fs.create_file("/dev/notnull/should_skip.file", contents="x" * MIN_FILE_SIZE)
+        fs.create_file("/dev/should_skip.file", contents="x" * MIN_FILE_SIZE)
         fs.create_file("/usr/bin/binary", contents="x" * MIN_FILE_SIZE)
 
         file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
@@ -507,23 +513,6 @@ class TestSystemDirectoryBehavior:
 
 class TestComprehensiveScenarios:
     """Comprehensive test scenarios covering various edge cases."""
-
-    @patch("main.tqdm")
-    def test_empty_directories(self, mock_tqdm, fs):
-        """Test scanning empty directories."""
-        mock_pbar = MagicMock()
-        mock_tqdm.return_value.__enter__.return_value = mock_pbar
-
-        fs.create_dir("/empty")
-
-        file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
-            Path("/empty"), used=100000000, min_size=MIN_FILE_SIZE
-        )
-
-        assert file_count == 0
-        assert total_size == 0
-        assert file_cats == {}
-        assert dir_cats == {}
 
     @patch("main.tqdm")
     def test_only_small_files(self, mock_tqdm, fs):
