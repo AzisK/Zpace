@@ -326,23 +326,23 @@ def main():
     scan_path = Path(args.path).expanduser().resolve()
 
     if not scan_path.exists():
-        print(f"❌ Error: Path '{scan_path}' does not exist")
+        print(f"ERROR: Path '{scan_path}' does not exist")
         return
 
     if not scan_path.is_dir():
-        print(f"❌ Error: Path '{scan_path}' is not a directory")
+        print(f"ERROR: Path '{scan_path}' is not a directory")
         sys.exit(1)
 
     # Display disk usage
     total, used, free = map(float, get_disk_usage(str(scan_path)))
     terminal_width = shutil.get_terminal_size().columns
 
-    print("\n💾 Disk Usage")
+    print("\nDISK USAGE")
     print("═" * terminal_width)
     print(f"  Free:  {format_size(free)} / {format_size(total)}")
     print(f"  Used:  {format_size(used)} ({used / total * 100:.1f}%)")
     print("═" * terminal_width)
-    print(f"\n🔍 Scanning: {scan_path}")
+    print(f"\nSCANNING: {scan_path}")
     print(f"   Min size: {args.min_size} KB")
     print()
 
@@ -352,10 +352,10 @@ def main():
             scan_path, used, args.min_size * 1024
         )
     except KeyboardInterrupt:
-        print("\n⚠️  Scan interrupted by user")
+        print("\nScan interrupted by user")
         sys.exit(1)
     except Exception as e:
-        print(f"❌ Error during scan: {e}")
+        print(f"Error during scan: {e}")
         sys.exit(1)
 
     # Get top N for each category
