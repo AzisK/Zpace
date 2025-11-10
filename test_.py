@@ -239,7 +239,6 @@ class TestScanFilesAndDirs:
         mock_pbar = MagicMock()
         mock_tqdm.return_value.__enter__.return_value = mock_pbar
 
-        fs.create_dir("/test")
         fs.create_file("/test/small.txt", contents="x" * 1024)  # 1KB
         fs.create_file("/test/tiny1.txt", contents="x")
         fs.create_file("/test/tiny2.jpg", contents="x")
@@ -260,7 +259,6 @@ class TestScanFilesAndDirs:
         mock_pbar = MagicMock()
         mock_tqdm.return_value.__enter__.return_value = mock_pbar
 
-        fs.create_dir("/test")
         # Create files with sufficient size to be categorized
         fs.create_file("/test/doc.pdf", contents="x" * MIN_FILE_SIZE)
         fs.create_file("/test/image.jpg", contents="x" * MIN_FILE_SIZE)
@@ -295,16 +293,6 @@ class TestFileSystem:
         """Test scanning a complex filesystem with various file types and directories."""
         mock_pbar = MagicMock()
         mock_tqdm.return_value.__enter__.return_value = mock_pbar
-
-        # Create complex filesystem structure
-        fs.create_dir("/test")
-        fs.create_dir("/test/documents")
-        fs.create_dir("/test/documents/subdocs")
-        fs.create_dir("/test/code")
-        fs.create_dir("/test/code/src")
-        fs.create_dir("/test/node_modules")
-        fs.create_dir("/test/venv")
-        fs.create_dir("/test/dev")
 
         # Create files with appropriate sizes
         fs.create_file("/test/node_modules/node.js", contents="x" * (MIN_FILE_SIZE + 50000))
@@ -358,14 +346,6 @@ class TestFileSystem:
 
         mock_is_skip.side_effect = is_skip_side_effect
 
-        # Create filesystem with system directories
-        fs.create_dir("/home")
-        fs.create_dir("/home/user")
-        fs.create_dir("/private/var")
-        fs.create_dir("/dev")
-        fs.create_dir("/proc")
-        fs.create_dir("/normal_dir")
-
         # Create files
         fs.create_file("/system.file", contents="x" * MIN_FILE_SIZE)
         fs.create_file("/home/user.file", contents="x" * MIN_FILE_SIZE)
@@ -399,12 +379,6 @@ class TestFileSystem:
         mock_pbar = MagicMock()
         mock_tqdm.return_value.__enter__.return_value = mock_pbar
 
-        # Create project structure with special directories
-        fs.create_dir("/project")
-        fs.create_dir("/project/src")
-        fs.create_dir("/project/node_modules")
-        fs.create_dir("/project/venv")
-
         # Create files
         fs.create_file("/project/README.md", contents="x" * MIN_FILE_SIZE)
         fs.create_file("/project/src/main.py", contents="x" * MIN_FILE_SIZE)
@@ -428,8 +402,6 @@ class TestFileSystem:
         """Test scanning with mixed file types and sizes."""
         mock_pbar = MagicMock()
         mock_tqdm.return_value.__enter__.return_value = mock_pbar
-
-        fs.create_dir("/mixed")
 
         # Create files with different sizes
         fs.create_file("/mixed/huge_video.mp4", contents="x" * (MIN_FILE_SIZE * 10))
@@ -467,13 +439,6 @@ class TestFileSystem:
 
         mock_is_skip.side_effect = is_skip_side_effect
 
-        # Create filesystem structure
-        fs.create_dir("/home")
-        fs.create_dir("/home/user")
-        fs.create_dir("/dev")
-        fs.create_dir("/usr")
-        fs.create_dir("/usr/bin")
-
         # Create files
         fs.create_file("/home/user/normal.file", contents="x" * MIN_FILE_SIZE)
         fs.create_file("/dev/should/skip.file", contents="x" * MIN_FILE_SIZE)
@@ -499,7 +464,6 @@ class TestFileSystem:
         mock_pbar = MagicMock()
         mock_tqdm.return_value.__enter__.return_value = mock_pbar
 
-        fs.create_dir("/small_files")
         fs.create_file("/small_files/tiny1.txt", contents="x")
         fs.create_file("/small_files/tiny2.jpg", contents="x")
         fs.create_file("/small_files/tiny3.py", contents="x")
@@ -518,25 +482,26 @@ class TestFileSystem:
         mock_pbar = MagicMock()
         mock_tqdm.return_value.__enter__.return_value = mock_pbar
 
-        # Create deep nesting
-        current_path = "/deep"
-        fs.create_dir(current_path)
-        fs.create_file(f"{current_path}/root_file.txt", contents="x" * (MIN_FILE_SIZE + 1000))
-
-        for i in range(1, 6):  # 5 levels deep
-            current_path = f"/deep/level{i}"
-            fs.create_dir(current_path)
-            fs.create_file(
-                f"{current_path}/file_at_level{i}.txt", contents="x" * (MIN_FILE_SIZE + 1000)
-            )
-
-        file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
-            Path("/deep"), used=100000000, min_size=MIN_FILE_SIZE
+        fs.create_file("/deep/level1/file_at_level1.txt", contents="x" * MIN_FILE_SIZE)
+        fs.create_file("/deep/level1/level2/file_at_level2.txt", contents="x" * MIN_FILE_SIZE)
+        fs.create_file(
+            "/deep/level1/level2/level3/file_at_level3.txt", contents="x" * MIN_FILE_SIZE
+        )
+        fs.create_file(
+            "/deep/level1/level2/level3/level4/file_at_level4.txt", contents="x" * MIN_FILE_SIZE
+        )
+        fs.create_file(
+            "/deep/level1/level2/level3/level4/level5/file_at_level5.txt",
+            contents="x" * MIN_FILE_SIZE,
         )
 
-        assert file_count == 6  # root + 5 levels
+        file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
+            Path("/deep"), used=1000000, min_size=MIN_FILE_SIZE
+        )
+
+        assert file_count == 5  # 5 levels
         assert "Documents" in file_cats
-        assert len(file_cats["Documents"]) == 6
+        assert len(file_cats["Documents"]) == 5
 
 
 if __name__ == "__main__":
