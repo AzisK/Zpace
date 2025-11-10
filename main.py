@@ -338,10 +338,10 @@ def main():
     terminal_width = shutil.get_terminal_size().columns
 
     print("\nDISK USAGE")
-    print("═" * terminal_width)
+    print("=" * terminal_width)
     print(f"  Free:  {format_size(free)} / {format_size(total)}")
     print(f"  Used:  {format_size(used)} ({used / total * 100:.1f}%)")
-    print("═" * terminal_width)
+    print("=" * terminal_width)
     print(f"\nSCANNING: {scan_path}")
     print(f"   Min size: {args.min_size} KB")
     print()
