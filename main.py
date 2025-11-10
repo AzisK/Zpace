@@ -270,9 +270,9 @@ def print_results(
             if not entries:
                 continue
 
-            print(f"\n{'─' * terminal_width}")
+            print(f"\n{'-' * terminal_width}")
             print(f"{category} ({len(entries)} directories)")
-            print("─" * terminal_width)
+            print("-" * terminal_width)
 
             for size, dirpath in entries:
                 print(f"  {format_size(size):>12}  {dirpath}")
@@ -288,9 +288,9 @@ def print_results(
             if not entries:
                 continue
 
-            print(f"\n{'─' * terminal_width}")
+            print(f"\n{'-' * terminal_width}")
             print(f"{category} ({len(entries)} files)")
-            print("─" * terminal_width)
+            print("-" * terminal_width)
 
             for size, filepath in entries:
                 print(f"  {format_size(size):>12}  {filepath}")
