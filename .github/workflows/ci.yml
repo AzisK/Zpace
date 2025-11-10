@@ -33,7 +33,7 @@ jobs:
       run: uv sync
 
     - name: Run tests
-      run: uv run pytest test_main.py -v
+      run: uv run pytest test_.py -v
 
     - name: Run linter
       run: uv run ruff check .

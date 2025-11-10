@@ -106,7 +106,7 @@ def categorize_file(filepath: Path) -> str:
     return "Others"
 
 
-def should_skip_directory(dirpath: Path) -> bool:
+def is_skip_directory(dirpath: Path) -> bool:
     """Check if directory should be skipped (system directories)."""
     return dirpath in SKIP_DIRS
 
@@ -183,9 +183,8 @@ def scan_files_and_dirs(
                 if (
                     is_skip_dirs
                     and len(dir_path.parts) <= DEEPEST_SKIP_DIRS_LEVEL
-                    and should_skip_directory(dir_path)
+                    and is_skip_directory(dir_path)
                 ):
-                    print(f"Skipping system directory: {dir_path}")
                     dirs_to_remove.append(dirname)
                     continue
 
@@ -262,36 +261,36 @@ def print_results(
 
     # Print special directories first
     if dir_categories:
-        print(f"\n{'═' * terminal_width}")
-        print("📦 SPECIAL DIRECTORIES")
-        print("═" * terminal_width)
+        print(f"\n{'=' * terminal_width}")
+        print("SPECIAL DIRECTORIES")
+        print("=" * terminal_width)
 
         for category in sorted(dir_categories.keys()):
             entries = dir_categories[category]
             if not entries:
                 continue
 
-            print(f"\n{'─' * terminal_width}")
-            print(f"📁 {category} ({len(entries)} directories)")
-            print("─" * terminal_width)
+            print(f"\n{'-' * terminal_width}")
+            print(f"{category} ({len(entries)} directories)")
+            print("-" * terminal_width)
 
             for size, dirpath in entries:
                 print(f"  {format_size(size):>12}  {dirpath}")
 
     # Print file categories
     if file_categories:
-        print(f"\n{'═' * terminal_width}")
-        print("📄 LARGEST FILES BY CATEGORY")
-        print("═" * terminal_width)
+        print(f"\n{'=' * terminal_width}")
+        print("LARGEST FILES BY CATEGORY")
+        print("=" * terminal_width)
 
         for category in sorted(file_categories.keys()):
             entries = file_categories[category]
             if not entries:
                 continue
 
-            print(f"\n{'─' * terminal_width}")
-            print(f"📁 {category} ({len(entries)} files)")
-            print("─" * terminal_width)
+            print(f"\n{'-' * terminal_width}")
+            print(f"{category} ({len(entries)} files)")
+            print("-" * terminal_width)
 
             for size, filepath in entries:
                 print(f"  {format_size(size):>12}  {filepath}")
@@ -326,23 +325,23 @@ def main():
     scan_path = Path(args.path).expanduser().resolve()
 
     if not scan_path.exists():
-        print(f"❌ Error: Path '{scan_path}' does not exist")
+        print(f"ERROR: Path '{scan_path}' does not exist")
         return
 
     if not scan_path.is_dir():
-        print(f"❌ Error: Path '{scan_path}' is not a directory")
+        print(f"ERROR: Path '{scan_path}' is not a directory")
         sys.exit(1)
 
     # Display disk usage
     total, used, free = map(float, get_disk_usage(str(scan_path)))
     terminal_width = shutil.get_terminal_size().columns
 
-    print("\n💾 Disk Usage")
-    print("═" * terminal_width)
+    print("\nDISK USAGE")
+    print("=" * terminal_width)
     print(f"  Free:  {format_size(free)} / {format_size(total)}")
     print(f"  Used:  {format_size(used)} ({used / total * 100:.1f}%)")
-    print("═" * terminal_width)
-    print(f"\n🔍 Scanning: {scan_path}")
+    print("=" * terminal_width)
+    print(f"\nSCANNING: {scan_path}")
     print(f"   Min size: {args.min_size} KB")
     print()
 
@@ -352,10 +351,10 @@ def main():
             scan_path, used, args.min_size * 1024
         )
     except KeyboardInterrupt:
-        print("\n⚠️  Scan interrupted by user")
+        print("\nScan interrupted by user")
         sys.exit(1)
     except Exception as e:
-        print(f"❌ Error during scan: {e}")
+        print(f"Error during scan: {e}")
         sys.exit(1)
 
     # Get top N for each category
@@ -363,12 +362,13 @@ def main():
     top_dirs = get_top_n_per_category(dir_cats, top_n=args.top)
 
     # Display results
-    print("\n✅ Scan complete!")
+    print("\nSCAN COMPLETE!")
     print(f"   Found {total_files:,} files")
     print(f"   Found {sum(len(e) for e in dir_cats.values())} special directories")
     print(f"   Total size: {format_size(total_size)}")
 
     print_results(top_files, top_dirs, terminal_width)
+    print("=" * terminal_width)
 
 
 if __name__ == "__main__":
@@ -377,4 +377,4 @@ if __name__ == "__main__":
     start = time.time()
     main()
     elapsed = time.time() - start
-    print(f"⏱️  Scan completed in {elapsed:.2f}s")
+    print(f"Scan completed in {elapsed:.2f}s")

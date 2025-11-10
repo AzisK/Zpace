@@ -102,7 +102,7 @@ uv run pre-commit run --all-files
 
 ```bash
 # Run tests
-uv run pytest test_main.py -v
+uv run pytest test_.py -v
 
 # Test across multiple Python versions (optional)
 ./testVersions.sh
