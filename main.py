@@ -106,7 +106,7 @@ def categorize_file(filepath: Path) -> str:
     return "Others"
 
 
-def should_skip_directory(dirpath: Path) -> bool:
+def is_skip_directory(dirpath: Path) -> bool:
     """Check if directory should be skipped (system directories)."""
     return dirpath in SKIP_DIRS
 
@@ -183,7 +183,7 @@ def scan_files_and_dirs(
                 if (
                     is_skip_dirs
                     and len(dir_path.parts) <= DEEPEST_SKIP_DIRS_LEVEL
-                    and should_skip_directory(dir_path)
+                    and is_skip_directory(dir_path)
                 ):
                     print(f"Skipping system directory: {dir_path}")
                     dirs_to_remove.append(dirname)

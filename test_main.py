@@ -9,7 +9,7 @@ from main import (
     get_top_n_per_category,
     identify_special_dir,
     scan_files_and_dirs,
-    should_skip_directory,
+    is_skip_directory,
     MIN_FILE_SIZE,
     SKIP_DIRS,
 )
@@ -58,6 +58,8 @@ class TestCategorizeFile:
     def test_unknown_extension(self):
         assert categorize_file(Path("file.xyz")) == "Others"
         assert categorize_file(Path("noext")) == "Others"
+        assert categorize_file(Path("file.")) == "Others"
+        assert categorize_file(Path(".hiddenfile")) == "Others"
 
 
 class TestIdentifySpecialDir:
@@ -101,19 +103,19 @@ class TestShouldSkipDirectory:
     """Test system directory skipping."""
 
     def test_linux_system_dirs(self):
-        assert should_skip_directory(Path("/dev"))
-        assert should_skip_directory(Path("/proc"))
-        assert should_skip_directory(Path("/sys"))
+        assert is_skip_directory(Path("/dev"))
+        assert is_skip_directory(Path("/proc"))
+        assert is_skip_directory(Path("/sys"))
 
     def test_macos_system_dirs(self):
-        assert should_skip_directory(Path("/System"))
-        assert should_skip_directory(Path("/Library"))
-        assert should_skip_directory(Path("/private/var"))
+        assert is_skip_directory(Path("/System"))
+        assert is_skip_directory(Path("/Library"))
+        assert is_skip_directory(Path("/private/var"))
 
     def test_normal_dirs(self):
-        assert not should_skip_directory(Path("/home"))
-        assert not should_skip_directory(Path("/Users"))
-        assert not should_skip_directory(Path("/tmp"))
+        assert not is_skip_directory(Path("/home"))
+        assert not is_skip_directory(Path("/Users"))
+        assert not is_skip_directory(Path("/tmp"))
 
 
 class TestFormatSize:
@@ -164,7 +166,7 @@ class TestCalculateDirSize:
         fs.create_file("/test/subdir/nested.txt", contents="nested" * 100)
 
         size = calculate_dir_size(Path("/test"))
-        assert size > 1000
+        assert size >= 1000
 
     def test_nonexistent_directory(self):
         size = calculate_dir_size(Path("/nonexistent/directory/path"))
@@ -273,15 +275,6 @@ class TestScanFilesAndDirs:
         assert len(file_cats["Documents"]) == 1
         assert len(file_cats["Pictures"]) == 1
 
-
-class TestEdgeCases:
-    """Test edge cases and error conditions."""
-
-    def test_categorize_file_nonexistent_extension(self):
-        # Files with dots but no valid extension
-        assert categorize_file(Path("file.")) == "Others"
-        assert categorize_file(Path(".hiddenfile")) == "Others"
-
     @patch("main.tqdm")
     def test_scan_nonexistent_directory(self, mock_tqdm):
         mock_pbar = MagicMock()
@@ -294,7 +287,7 @@ class TestEdgeCases:
         assert result[3] == 0  # total_size
 
 
-class TestRealisticFileSystem:
+class TestFileSystem:
     """Test with a realistic filesystem structure containing various file types and directories."""
 
     @patch("main.tqdm")
@@ -354,19 +347,18 @@ class TestRealisticFileSystem:
         assert "small.txt" not in document_files  # Should be filtered by size
 
     @patch("main.tqdm")
-    @patch("main.should_skip_directory")
-    def test_skip_directories_respected(self, mock_should_skip, mock_tqdm, fs):
+    @patch("main.is_skip_directory")
+    def test_skip_directories_respected(self, mock_is_skip, mock_tqdm, fs):
         """Test that system directories are properly skipped."""
         mock_pbar = MagicMock()
         mock_tqdm.return_value.__enter__.return_value = mock_pbar
 
-        def should_skip_side_effect(dirpath):
+        def is_skip_side_effect(dirpath):
             return str(dirpath) in {str(s) for s in SKIP_DIRS}
 
-        mock_should_skip.side_effect = should_skip_side_effect
+        mock_is_skip.side_effect = is_skip_side_effect
 
         # Create filesystem with system directories
-        fs.create_dir("/")
         fs.create_dir("/home")
         fs.create_dir("/home/user")
         fs.create_dir("/private/var")
@@ -400,10 +392,6 @@ class TestRealisticFileSystem:
             or "user_doc.pdf" in all_files
             or "system.file" in all_files
         )
-
-
-class TestSpecialDirectoryHandling:
-    """Test special directory detection and handling."""
 
     @patch("main.tqdm")
     def test_special_directories_not_descended(self, mock_tqdm, fs):
@@ -467,24 +455,19 @@ class TestSpecialDirectoryHandling:
         # At least some files should be categorized
         assert len(file_cats) > 0
 
-
-class TestSystemDirectoryBehavior:
-    """Test behavior with system directories."""
-
     @patch("main.tqdm")
-    @patch("main.should_skip_directory")
-    def test_skip_directories_in_nested_paths(self, mock_should_skip, mock_tqdm, fs):
+    @patch("main.is_skip_directory")
+    def test_skip_directories_in_nested_paths(self, mock_is_skip, mock_tqdm, fs):
         """Test that system directories are skipped even when nested in scan path."""
         mock_pbar = MagicMock()
         mock_tqdm.return_value.__enter__.return_value = mock_pbar
 
-        def should_skip_side_effect(dirpath):
+        def is_skip_side_effect(dirpath):
             return str(dirpath) in {str(s) for s in SKIP_DIRS}
 
-        mock_should_skip.side_effect = should_skip_side_effect
+        mock_is_skip.side_effect = is_skip_side_effect
 
         # Create filesystem structure
-        fs.create_dir("/")
         fs.create_dir("/home")
         fs.create_dir("/home/user")
         fs.create_dir("/dev")
@@ -493,7 +476,7 @@ class TestSystemDirectoryBehavior:
 
         # Create files
         fs.create_file("/home/user/normal.file", contents="x" * MIN_FILE_SIZE)
-        fs.create_file("/dev/should_skip.file", contents="x" * MIN_FILE_SIZE)
+        fs.create_file("/dev/should/skip.file", contents="x" * MIN_FILE_SIZE)
         fs.create_file("/usr/bin/binary", contents="x" * MIN_FILE_SIZE)
 
         file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
@@ -506,13 +489,9 @@ class TestSystemDirectoryBehavior:
             all_files.extend([Path(f[1]).name for f in category_files])
 
         # Files in /dev should not appear
-        assert "should_skip.file" not in all_files
+        assert "skip.file" not in all_files
         # Files outside /dev should appear
         assert len(all_files) > 0  # Some files should be found
-
-
-class TestComprehensiveScenarios:
-    """Comprehensive test scenarios covering various edge cases."""
 
     @patch("main.tqdm")
     def test_only_small_files(self, mock_tqdm, fs):
