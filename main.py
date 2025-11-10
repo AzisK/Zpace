@@ -185,7 +185,6 @@ def scan_files_and_dirs(
                     and len(dir_path.parts) <= DEEPEST_SKIP_DIRS_LEVEL
                     and is_skip_directory(dir_path)
                 ):
-                    print(f"Skipping system directory: {dir_path}")
                     dirs_to_remove.append(dirname)
                     continue
 
@@ -262,9 +261,9 @@ def print_results(
 
     # Print special directories first
     if dir_categories:
-        print(f"\n{'═' * terminal_width}")
-        print("📦 SPECIAL DIRECTORIES")
-        print("═" * terminal_width)
+        print(f"\n{'=' * terminal_width}")
+        print("SPECIAL DIRECTORIES")
+        print("=" * terminal_width)
 
         for category in sorted(dir_categories.keys()):
             entries = dir_categories[category]
@@ -272,7 +271,7 @@ def print_results(
                 continue
 
             print(f"\n{'─' * terminal_width}")
-            print(f"📁 {category} ({len(entries)} directories)")
+            print(f"{category} ({len(entries)} directories)")
             print("─" * terminal_width)
 
             for size, dirpath in entries:
@@ -280,9 +279,9 @@ def print_results(
 
     # Print file categories
     if file_categories:
-        print(f"\n{'═' * terminal_width}")
-        print("📄 LARGEST FILES BY CATEGORY")
-        print("═" * terminal_width)
+        print(f"\n{'=' * terminal_width}")
+        print("LARGEST FILES BY CATEGORY")
+        print("=" * terminal_width)
 
         for category in sorted(file_categories.keys()):
             entries = file_categories[category]
@@ -290,7 +289,7 @@ def print_results(
                 continue
 
             print(f"\n{'─' * terminal_width}")
-            print(f"📁 {category} ({len(entries)} files)")
+            print(f"{category} ({len(entries)} files)")
             print("─" * terminal_width)
 
             for size, filepath in entries:
@@ -363,12 +362,13 @@ def main():
     top_dirs = get_top_n_per_category(dir_cats, top_n=args.top)
 
     # Display results
-    print("\n✅ Scan complete!")
+    print("\nSCAN COMPLETE!")
     print(f"   Found {total_files:,} files")
     print(f"   Found {sum(len(e) for e in dir_cats.values())} special directories")
     print(f"   Total size: {format_size(total_size)}")
 
     print_results(top_files, top_dirs, terminal_width)
+    print("=" * terminal_width)
 
 
 if __name__ == "__main__":
@@ -377,4 +377,4 @@ if __name__ == "__main__":
     start = time.time()
     main()
     elapsed = time.time() - start
-    print(f"⏱️  Scan completed in {elapsed:.2f}s")
+    print(f"Scan completed in {elapsed:.2f}s")
