@@ -25,7 +25,7 @@ jobs:
             const questions = data.results.map((q, i) => {
               const choices = [...q.incorrect_answers, q.correct_answer]
                 .sort(() => Math.random() - 0.5)
-                .map((a, idx) => `> ${String.fromCharCode(65 + idx)}. ${decodeHtmfl(a)}`)
+                .map((a, idx) => `> ${String.fromCharCode(65 + idx)}. ${decodeHtml(a)}`)
                 .join("\n");
               return `### 🧩 Q${i + 1}: ${decodeHtml(q.question)}\n${choices}\n\n`;
             }).join("\n---\n\n");
