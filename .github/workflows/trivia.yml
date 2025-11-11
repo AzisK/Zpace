@@ -33,7 +33,7 @@ jobs:
               return `### 🧩 Q${i + 1}: ${decodeHtml(q.question)}\\n${choices}\\n\\n`;
             }).join("\\n---\\n\\n");
 
-            const header = "👋 **Thank you for opening this Pull Request!**\\n\\n🧠 **CI Trivia Time!**\\nHere are 3 random computer trivia questions to keep you entertained while CI runs.\\n*(You can reply with your guesses!)*\\n\\n";
+            const header = "**⸜(｡˃ ᵕ ˂ )⸝♡ Thank you for opening this Pull Request!**\\n\\n **Trivia Time! ( ˶°ㅁ°) !!** \\nHere are 3 random computer trivia questions to keep you entertained while CI runs.\\n*(You can reply with your guesses!)*\\n\\n";
             const body = header + questions;
 
             await github.rest.issues.createComment({
