@@ -49,6 +49,7 @@ jobs:
   mypy:
     name: Type Check
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -63,3 +64,25 @@ jobs:
 
       - name: Type check with mypy
         run: uv run mypy .
+
+  post-dog:
+    name: Celebrate with a Dog!
+    needs: [test, mypy]  # Only run if `test` and `mypy` succeed
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Fetch a random dog
+        id: dog
+        run: |
+          DOG_URL=$(curl -s https://dog.ceo/api/breeds/image/random | jq -r '.message')
+          echo "dog_url=$DOG_URL" >> $GITHUB_OUTPUT
+      - name: Post dog in PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🎉 **All tests passed! Here's a dog for you!** 🐶\n\n![Dog](${{ steps.dog.outputs.dog_url }})`
+            })
