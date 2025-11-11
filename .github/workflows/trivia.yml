@@ -35,7 +35,7 @@ jobs:
             const questions = data.results.map((q, i) => {
               const choices = [...q.incorrect_answers, q.correct_answer]
                 .sort(() => Math.random() - 0.5)
-                .map((a, idx) => `> ${String.fromCharCode(65 + idx)}. ${decodeHtml(a)}`)
+                .map((a, idx) => `${String.fromCharCode(65 + idx)}. ${decodeHtml(a)}`)
                 .join("\n");
               return `### 🧩 Q${i + 1}: ${decodeHtml(q.question)}\n${choices}\n\n`;
             }).join("\n---\n\n");
@@ -43,7 +43,7 @@ jobs:
             const committer = context.payload.sender.login;
             const quote = "You got this! Remember, every bug is just a feature in disguise.";
 
-            const header = "**⸜(｡˃ ᵕ ˂ )⸝♡ Thank you for opening this Pull Request, @${committer}!**\n\n> ${quote}\n\n**( ˶°ㅁ°) !! It's Trivia Time!** \nHere are 3 trivia questions to keep you entertained while CI runs.\n*(Feel free to demonstrate you knowledge and reply!)*\n\n";
+            const header = `**⸜(｡˃ ᵕ ˂ )⸝♡ Thank you for opening this Pull Request, @${committer}!**\n\n> ${quote}\n\n**( ˶°ㅁ°) !! It's Trivia Time!** \nHere are 3 trivia questions to keep you entertained while CI runs.\n*(Feel free to demonstrate you knowledge and reply!)*\n\n`;
             const body = header + questions;
 
             await github.rest.issues.createComment({
