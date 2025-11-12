@@ -66,6 +66,7 @@ jobs:
         run: uv run mypy .
 
   post-dog:
+    if: github.event_name == 'pull_request'
     name: Celebrate with a Dog!
     needs: [test, mypy]  # Only run if `test` and `mypy` succeed
     runs-on: ubuntu-latest
