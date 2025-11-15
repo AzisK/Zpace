@@ -62,7 +62,7 @@ jobs:
         id: inference
         uses: actions/ai-inference@v1
         with:
-          model: openai/chatgpt-5
+          model: openai/gpt-5
           system-prompt-file: .github/review_system_prompt.txt
           prompt-file: prompt.txt
           max-tokens: 10000
