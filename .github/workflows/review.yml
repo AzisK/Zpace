@@ -1,0 +1,70 @@
+---
+name: Pull Request Review
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      models: read
+      pull-requests: write
+
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
+      HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Collect user prompt
+        run: |
+          PROMPT=prompt.txt
+
+          cp .github/review_user_prompt.txt $PROMPT
+
+          echo "Fetching PR metadata..."
+          gh pr view $PR_NUMBER --json title,body,commits > pr.json
+
+          echo "Fetching diff..."
+          gh pr diff $PR_NUMBER > diff.txt
+
+          {
+            echo ""
+            echo "Title: $(jq -r '.title' pr.json)"
+            echo ""
+
+            BODY=$(jq -r '.body' pr.json)
+            if [ -n "$BODY" ] && [ "$BODY" != "null" ]; then
+              echo "Body: $BODY"
+              echo ""
+            fi
+
+            echo "Commits:"
+            jq -r '.commits[] | "Message: \(.messageHeadline)\nBody: \(.messageBody // "None")\n"' pr.json
+            echo ""
+
+            echo "Diff:"
+            cat diff.txt
+          } >> $PROMPT
+
+          echo "----- GENERATED PROMPT -----"
+          cat $PROMPT
+          echo "----------------------------"
+
+      - name: Review
+        id: inference
+        uses: actions/ai-inference@v1
+        with:
+          model: openai/chatgpt-5
+          system-prompt-file: .github/review_system_prompt.txt
+          prompt-file: prompt.txt
+          max-tokens: 10000
+
+      - name: Comment
+        run: gh pr comment $PR_NUMBER --body "${{ steps.inference.outputs.response }}"
