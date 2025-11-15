@@ -60,9 +60,9 @@ jobs:
 
       - name: Review
         id: inference
-        uses: actions/ai-inference@v1.2
+        uses: actions/ai-inference@v1
         with:
-          model: openai/gpt-5
+          model: openai/gpt-4o
           system-prompt-file: .github/review_system_prompt.txt
           prompt-file: prompt.txt
           max-tokens: 7000
