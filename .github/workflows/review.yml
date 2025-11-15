@@ -60,12 +60,12 @@ jobs:
 
       - name: Review
         id: inference
-        uses: actions/ai-inference@v1
+        uses: actions/ai-inference@v1.2
         with:
           model: openai/gpt-5
           system-prompt-file: .github/review_system_prompt.txt
           prompt-file: prompt.txt
-          max-tokens: 10000
+          max-tokens: 7000
 
       - name: Comment
         run: gh pr comment $PR_NUMBER --body "${{ steps.inference.outputs.response }}"
