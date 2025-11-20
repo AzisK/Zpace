@@ -10,8 +10,6 @@ It's built to indentify the biggest chunks of data that could potentially free u
 
 ---
 
-The CLI is using tqdm to show the progress of scanned space. It is also using argparse to accpet CLI args.
-
 The CLI is built for all platforms, Linux, MacOS and Windows.
 
 It needs to be fast and print out useful information so that it is helpful to users. To be fast,
