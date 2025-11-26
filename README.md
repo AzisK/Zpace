@@ -66,6 +66,13 @@ zpace ~/.cache
 sudo zpace / -n 20
 ```
 
+### macOS Permissions
+If you see "Access Denied" for the Trash bin or other directories, you need to grant **Full Disk Access** to your terminal application (e.g., Terminal, iTerm2, VS Code).
+
+1. Open **System Settings** -> **Privacy & Security** -> **Full Disk Access**.
+2. Click the `+` button and add your terminal application.
+3. Restart your terminal.
+
 ## Development
 
 ### Setup
