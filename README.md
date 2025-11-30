@@ -55,6 +55,9 @@ zpace ~/Documents -n 15 -m 500
 
 ### Example Output
 
+<details>
+<summary>Open example output</summary>
+
 ```bash
 zpace
 
@@ -305,6 +308,7 @@ Videos (10 files)
      156.83 MB  /Users/azis/Downloads/Bouldering/IMG_4145.MOV
 ======================================================================================================================
 ```
+</details>
 
 ### Tips
 
