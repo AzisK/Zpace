@@ -302,6 +302,18 @@ def print_results(
                 print(f"  {format_size(size):>12}  {filepath}")
 
 
+def get_trash_path() -> Optional[Path]:
+    """Get the path to the Trash/Recycle Bin based on the OS."""
+    if sys.platform == "darwin":
+        return Path.home() / ".Trash"
+    elif sys.platform == "linux":
+        return Path.home() / ".local" / "share" / "Trash"
+    elif sys.platform == "win32":
+        system_drive = os.environ.get("SystemDrive", "C:")
+        return Path(f"{system_drive}/$Recycle.Bin")
+    return None
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Analyze disk usage and find largest files and directories by category"
@@ -346,6 +358,29 @@ def main():
     print("=" * terminal_width)
     print(f"  Free:  {format_size(free)} / {format_size(total)}")
     print(f"  Used:  {format_size(used)} ({used / total * 100:.1f}%)")
+
+    # Check Trash size
+    trash_path = get_trash_path()
+    if trash_path:
+        if trash_path.exists():
+            if os.access(trash_path, os.R_OK):
+                try:
+                    # Verify we can actually list it (os.access might lie on some systems/containers)
+                    next(os.scandir(trash_path), None)
+                    trash_size = calculate_dir_size(trash_path)
+                    additional_message = ""
+                    if trash_size > 1000 * 1024 * 1024:  # 1000 MB
+                        additional_message = " (Consider cleanin up your trash bin!)"
+                    print(f"  Trash: {format_size(trash_size)}{additional_message}")
+                except PermissionError:
+                    print("  Trash: Access Denied")
+            else:
+                print("  Trash: Access Denied")
+        else:
+            print("  Trash: Not Found")
+    else:
+        print("  Trash: Unknown OS")
+
     print("=" * terminal_width)
     print(f"\nSCANNING: {scan_path}")
     print(f"   Min size: {args.min_size} KB")
