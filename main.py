@@ -136,18 +136,20 @@ def calculate_dir_size(dirpath: Path) -> int:
     """
     total_size = 0
     try:
-        for entry in os.scandir(dirpath):
-            try:
-                if entry.is_file(follow_symlinks=False):
-                    stat = entry.stat(follow_symlinks=False)
-                    total_size += (
-                        stat.st_blocks * 512 if hasattr(stat, "st_blocks") else stat.st_size
-                    )
-                elif entry.is_dir(follow_symlinks=False):
-                    total_size += calculate_dir_size(Path(entry.path))
+        with os.scandir(dirpath) as it:
+            for entry in it:
+                try:
+                    if entry.is_file(follow_symlinks=False):
+                        stat = entry.stat(follow_symlinks=False)
+                        total_size += (
+                            stat.st_blocks * 512 if hasattr(stat, "st_blocks") else stat.st_size
+                        )
+                    elif entry.is_dir(follow_symlinks=False):
+                        # Only create Path object for recursion
+                        total_size += calculate_dir_size(Path(entry.path))
 
-            except (FileNotFoundError, PermissionError, OSError):
-                continue
+                except (FileNotFoundError, PermissionError, OSError):
+                    continue
     except (FileNotFoundError, PermissionError, OSError):
         pass
 
