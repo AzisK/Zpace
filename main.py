@@ -207,6 +207,10 @@ def scan_files_and_dirs(
             # Process files in current directory
             for name in files:
                 filepath = root_path / name
+                # Skip symlinks to prevent double counting and loops
+                if filepath.is_symlink():
+                    continue
+
                 try:
                     stat = os.stat(filepath)
                     size = stat.st_blocks * 512 if hasattr(stat, "st_blocks") else stat.st_size
