@@ -111,7 +111,8 @@ def is_skip_directory(dirpath: Path) -> bool:
 
 def identify_special_dir(dirpath: Path) -> Optional[str]:
     """
-    Check if directory is a special type that should be treated as atomic unit.
+    Check if directory is a special type that should be treated as an atomic unit.
+    Uses pre-computed reverse lookups for O(1) retrieval.
     Returns category name if special, None otherwise.
     """
     # Check for macOS .app bundles
