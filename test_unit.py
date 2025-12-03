@@ -570,7 +570,8 @@ class TestMainArguments:
 
                     # Verify scan called with correct args
                     args, kwargs = mock_scan.call_args
-                    assert str(args[0]) == test_path
+                    # Compare Path objects to handle OS-specific separators (e.g. / vs \)
+                    assert Path(args[0]) == Path(test_path)
                     # min_size is the 3rd positional argument (index 2)
                     assert args[2] == 500 * 1024  # KB to Bytes
 
