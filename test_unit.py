@@ -10,9 +10,12 @@ from main import (
     identify_special_dir,
     scan_files_and_dirs,
     is_skip_directory,
+    print_results,
+    main,
     MIN_FILE_SIZE,
     SKIP_DIRS,
 )
+from io import StringIO
 
 
 class TestCategorizeFile:
@@ -502,6 +505,166 @@ class TestFileSystem:
         assert file_count == 5  # 5 levels
         assert "Documents" in file_cats
         assert len(file_cats["Documents"]) == 5
+
+
+class TestPrintResults:
+    """Test output formatting."""
+
+    def test_print_empty_results(self):
+        with patch("sys.stdout", new=StringIO()) as fake_out:
+            print_results({}, {}, 80)
+            output = fake_out.getvalue()
+            assert "LARGEST FILES BY CATEGORY" not in output
+            assert "SPECIAL DIRECTORIES" not in output
+
+    def test_print_populated_results(self):
+        file_cats = {"Documents": [(1024, Path("/doc.pdf"))]}
+        dir_cats = {"Node Modules": [(2048, Path("/node_modules"))]}
+
+        with patch("sys.stdout", new=StringIO()) as fake_out:
+            print_results(file_cats, dir_cats, 80)
+            output = fake_out.getvalue()
+
+            assert "LARGEST FILES BY CATEGORY" in output
+            assert "SPECIAL DIRECTORIES" in output
+            assert "Documents (1 files)" in output
+            assert "Node Modules (1 directories)" in output
+            assert "1.00 KB" in output
+            assert "2.00 KB" in output
+
+
+class TestMainArguments:
+    """Test command line argument parsing."""
+
+    @patch("main.scan_files_and_dirs")
+    @patch("main.get_disk_usage")
+    @patch("main.print_results")
+    def test_default_arguments(self, mock_print, mock_disk, mock_scan):
+        mock_disk.return_value = (100, 50, 50)
+        mock_scan.return_value = ({}, {}, 0, 0)
+
+        with patch("sys.argv", ["main.py"]):
+            main()
+
+            # Verify scan called with default path (home)
+            args, _ = mock_scan.call_args
+            assert args[0] == Path.home()
+
+    @patch("main.scan_files_and_dirs")
+    @patch("main.get_disk_usage")
+    @patch("main.print_results")
+    def test_custom_arguments(self, mock_print, mock_disk, mock_scan):
+        mock_disk.return_value = (100, 50, 50)
+        mock_scan.return_value = ({}, {}, 0, 0)
+
+        # We need to mock Path.exists to return True for our test path
+        # OR we can just use a path that we know won't be checked for existence
+        # because we are mocking the scan function.
+        # However, main() checks for existence before calling scan.
+
+        with patch("pathlib.Path.exists", return_value=True):
+            with patch("pathlib.Path.is_dir", return_value=True):
+                test_path = "/Users/test/data"
+                with patch("sys.argv", ["main.py", test_path, "--min-size", "500", "--top", "5"]):
+                    main()
+
+                    # Verify scan called with correct args
+                    args, kwargs = mock_scan.call_args
+                    assert str(args[0]) == test_path
+                    # min_size is the 3rd positional argument (index 2)
+                    assert args[2] == 500 * 1024  # KB to Bytes
+
+
+class TestSymlinkHandling:
+    """Test symlink handling to prevent infinite loops."""
+
+    @patch("main.tqdm")
+    def test_symlink_loop(self, mock_tqdm, fs):
+        mock_pbar = MagicMock()
+        mock_tqdm.return_value.__enter__.return_value = mock_pbar
+
+        # Create a directory structure
+        fs.create_dir("/test/subdir")
+        fs.create_file("/test/file.txt", contents="x" * MIN_FILE_SIZE)
+
+        # Create a symlink pointing back to parent (loop)
+        # Note: pyfakefs supports symlinks
+        fs.create_symlink("/test/subdir/link_to_parent", "/test")
+
+        # Scan should complete without infinite recursion
+        # We set a timeout or just rely on the test finishing
+        file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
+            Path("/test"), used=100000, min_size=MIN_FILE_SIZE
+        )
+
+        # Should count the real file
+        assert file_count == 1
+        # Should NOT count the symlinked file (as we don't follow symlinks)
+
+    @patch("main.tqdm")
+    def test_symlink_to_file(self, mock_tqdm, fs):
+        mock_pbar = MagicMock()
+        mock_tqdm.return_value.__enter__.return_value = mock_pbar
+
+        fs.create_file("/test/real_file.txt", contents="x" * MIN_FILE_SIZE)
+        fs.create_symlink("/test/link_file.txt", "/test/real_file.txt")
+
+        file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
+            Path("/test"), used=100000, min_size=MIN_FILE_SIZE
+        )
+
+        # Should only count the real file, not the symlink
+        assert file_count == 1
+
+    @patch("main.tqdm")
+    def test_scan_symlinked_directory(self, mock_tqdm, fs):
+        """Test scanning a directory that is itself a symlink (like /tmp -> /private/tmp)."""
+        mock_pbar = MagicMock()
+        mock_tqdm.return_value.__enter__.return_value = mock_pbar
+
+        # Create real directory with content
+        fs.create_dir("/private/tmp/test")
+        fs.create_file("/private/tmp/test/file.txt", contents="x" * MIN_FILE_SIZE)
+
+        # Create symlink to it
+        fs.create_symlink("/tmp/test", "/private/tmp/test")
+
+        # Scan the symlinked path
+        file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
+            Path("/tmp/test"), used=100000, min_size=MIN_FILE_SIZE
+        )
+
+        # Should follow the root symlink and find the file
+        assert file_count == 1
+        assert total_size > 0
+
+
+class TestUnicodeHandling:
+    """Test handling of unicode filenames."""
+
+    @patch("main.tqdm")
+    def test_unicode_filenames(self, mock_tqdm, fs):
+        mock_pbar = MagicMock()
+        mock_tqdm.return_value.__enter__.return_value = mock_pbar
+
+        # Create files with unicode names
+        fs.create_file("/test/café.txt", contents="x" * MIN_FILE_SIZE)
+        fs.create_file("/test/🚀.png", contents="x" * MIN_FILE_SIZE)
+        fs.create_file("/test/こんにちは.doc", contents="x" * MIN_FILE_SIZE)
+
+        file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
+            Path("/test"), used=100000, min_size=MIN_FILE_SIZE
+        )
+
+        assert file_count == 3
+        assert "Documents" in file_cats
+        assert "Pictures" in file_cats
+
+        # Verify names are preserved
+        all_files = [Path(f[1]).name for cat in file_cats.values() for f in cat]
+        assert "café.txt" in all_files
+        assert "🚀.png" in all_files
+        assert "こんにちは.doc" in all_files
 
 
 if __name__ == "__main__":
