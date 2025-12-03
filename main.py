@@ -88,6 +88,10 @@ SPECIAL_DIRS = {
     "IDE Config": {".idea", ".vscode", ".vs", ".eclipse"},
     "Git Repos": {".git"},
 }
+
+# Pre-compute reverse lookups for O(1) access
+EXTENSION_MAP = {ext: cat for cat, exts in CATEGORIES.items() for ext in exts}
+SPECIAL_DIR_MAP = {name: cat for cat, names in SPECIAL_DIRS.items() for name in names}
 PROGRESS_UPDATE_THRESHOLD = 10 * 1024 * 1024  # 10 MB
 
 
@@ -97,13 +101,7 @@ def get_disk_usage(path):
 
 
 def categorize_file(filepath: Path) -> str:
-    suffix = filepath.suffix.lower()
-
-    for category, extensions in CATEGORIES.items():
-        if suffix in extensions:
-            return category
-
-    return "Others"
+    return EXTENSION_MAP.get(filepath.suffix.lower(), "Others")
 
 
 def is_skip_directory(dirpath: Path) -> bool:
@@ -113,21 +111,15 @@ def is_skip_directory(dirpath: Path) -> bool:
 
 def identify_special_dir(dirpath: Path) -> Optional[str]:
     """
-    Check if directory is a special type that should be treated as atomic unit.
+    Check if directory is a special type that should be treated as an atomic unit.
+    Uses pre-computed reverse lookups for O(1) retrieval.
     Returns category name if special, None otherwise.
     """
-    dir_name = dirpath.name.lower()
-
     # Check for macOS .app bundles
     if dirpath.suffix == ".app":
         return "macOS Apps"
 
-    # Check special directory names
-    for category, names in SPECIAL_DIRS.items():
-        if dir_name in names:
-            return category
-
-    return None
+    return SPECIAL_DIR_MAP.get(dirpath.name.lower())
 
 
 def calculate_dir_size(dirpath: Path) -> int:
