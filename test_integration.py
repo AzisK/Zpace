@@ -1,4 +1,5 @@
 import sys
+import os
 from pathlib import Path
 import pytest
 from main import get_trash_path
@@ -17,7 +18,12 @@ class TestTrashIntegration:
             assert path == Path.home() / ".local" / "share" / "Trash"
         elif sys.platform == "win32":
             # Windows path might vary depending on SystemDrive, but usually C:
-            assert str(path).endswith("$Recycle.Bin")
+            drive = os.environ.get("SystemDrive", "C:")
+            assert path == Path(drive) / "$Recycle.Bin"
         else:
             # Fail the test if we are running on an OS we don't support yet
-            pytest.fail(f"Unknown or unsupported OS: {sys.platform}")
+            pytest.fail(
+                f"Unknown or unsupported OS: {sys.platform}. "
+                "If you're seeing this on a supported platform, ensure your "
+                "platform-specific trash directory is implemented in get_trash_path."
+            )
