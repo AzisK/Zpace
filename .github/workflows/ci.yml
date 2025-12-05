@@ -49,7 +49,7 @@ jobs:
 
   mypy:
     name: Type Check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
 
     steps:
       - name: Checkout repository
@@ -70,7 +70,7 @@ jobs:
     if: github.event_name == 'pull_request'
     name: Celebrate with a Dog!
     needs: [test, mypy]  # Only run if `test` and `mypy` succeed
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
 
     steps:
       - name: Fetch a random dog
