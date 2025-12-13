@@ -89,7 +89,7 @@ SPECIAL_DIRS = {
     "Git Repos": {".git"},
 }
 
-# Pre-compute reverse lookups for O(1) access
+# Pre-compute lookups for O(1) access
 EXTENSION_MAP = {ext: cat for cat, exts in CATEGORIES.items() for ext in exts}
 SPECIAL_DIR_MAP = {name: cat for cat, names in SPECIAL_DIRS.items() for name in names}
 PROGRESS_UPDATE_THRESHOLD = 10 * 1024 * 1024  # 10 MB
@@ -225,7 +225,7 @@ def scan_files_and_dirs(
                 except (FileNotFoundError, PermissionError, OSError):
                     continue
 
-        # Update any remaining progress
+        # Final progress update
         if progress_update_buffer > 0:
             pbar.update(progress_update_buffer)
 
