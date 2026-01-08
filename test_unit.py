@@ -643,7 +643,7 @@ class TestSymlinkHandling:
                 pass
 
             mock_exit.assert_not_called()
-            mock_print.assert_any_call("Attention - you provided a symlink: /tmp/link")
+            mock_print.assert_any_call(f"Attention - you provided a symlink: {Path('/tmp/link')}")
 
 
 class TestUnicodeHandling:
