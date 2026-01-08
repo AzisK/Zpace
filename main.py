@@ -397,7 +397,7 @@ def main():
     # Check for symlink explicitly
     if raw_path.is_symlink():
         resolved = raw_path.resolve()
-        print(f"Attention — you provided a symlink: {raw_path}")
+        print(f"Attention - you provided a symlink: {raw_path}")
         print(f"It points to this directory: {resolved}")
         print(f"If you wish to analyse the symlinked directory, please pass its path: {resolved}")
         return

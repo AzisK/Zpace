@@ -1,6 +1,7 @@
 import pytest
 from pathlib import Path
 from unittest.mock import patch, MagicMock
+import sys
 
 from main import (
     calculate_dir_size_recursive,
@@ -334,6 +335,7 @@ class TestScanFilesAndDirs:
         document_files = [os.path.basename(f[1]) for f in documents]
         assert "small.txt" not in document_files  # Should be filtered by size
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="Test specific to Unix-like systems")
     @patch("main.tqdm")
     @patch("main.is_skip_path")
     def test_skip_directories_respected(self, mock_is_skip, mock_tqdm, fs):
@@ -427,6 +429,7 @@ class TestScanFilesAndDirs:
         # At least some files should be categorized
         assert len(file_cats) > 0
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="Test specific to Unix-like systems")
     @patch("main.tqdm")
     @patch("main.is_skip_path")
     def test_skip_directories_in_nested_paths(self, mock_is_skip, mock_tqdm, fs):
@@ -640,7 +643,7 @@ class TestSymlinkHandling:
                 pass
 
             mock_exit.assert_not_called()
-            mock_print.assert_any_call("Attention — you provided a symlink: /tmp/link")
+            mock_print.assert_any_call("Attention - you provided a symlink: /tmp/link")
 
 
 class TestUnicodeHandling:
