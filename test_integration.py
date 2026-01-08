@@ -21,7 +21,7 @@ class TestTrashIntegration:
             drive = os.environ.get("SystemDrive", "C:")
             # Ensure we construct an absolute path (C:\$Recycle.Bin)
             # Path("C:") is relative to CWD on that drive, Path("C:/") is absolute root
-            assert path == str(Path(f"{drive}/$Recycle.Bin"))
+            assert path == str(Path(drive) / "$Recycle.Bin")
         else:
             # Fail the test if we are running on an OS we don't support yet
             pytest.fail(
