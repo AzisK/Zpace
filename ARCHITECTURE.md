@@ -17,16 +17,16 @@ Certain directories are treated as single units rather than traversing their con
 - **Examples**: `node_modules`, `.venv`, `.git`, `target`, `.idea`.
 
 ### 3. Scanning Algorithm
-The tool uses a depth-first search approach using `os.walk` (and `os.scandir` for special directories) to traverse the file system.
+The tool uses an iterative, stack-based, depth-first search approach with `os.scandir`. This is more performant than the previous `os.walk` implementation as it avoids the overhead of `os.walk` and creating `pathlib.Path` objects in performance-critical sections.
 - **Optimization**: System directories (e.g., `/proc`, `/sys`, `/System`) are skipped to improve performance and avoid permission errors.
 - **Progress Tracking**: A `tqdm` progress bar shows real-time scanning progress based on bytes processed.
 
 ## Key Functions
 
-- **`scan_files_and_dirs(path, used, min_size)`**: The main driver function. It walks the directory tree, handles special directories, and aggregates file/directory statistics.
-- **`categorize_file(filepath)`**: Determines the category of a file based on its extension.
-- **`identify_special_dir(dirpath)`**: Checks if a directory is a "special" directory.
-- **`calculate_dir_size(dirpath)`**: Recursively calculates the size of a directory. Used for "special directories" where we don't want to categorize individual files inside.
+- **`scan_files_and_dirs(root_path, used_bytes, min_size)`**: The main driver function. It uses an iterative, stack-based approach with `os.scandir` to traverse the directory tree, handles special directories, and aggregates file/directory statistics.
+- **`categorize_extension(extension)`**: Determines the category of a file based on its extension.
+- **`identify_special_dir_name(dirname)`**: Checks if a directory is a "special" directory.
+- **`calculate_dir_size_recursive(dirpath)`**: Recursively calculates the size of a directory. Used for "special directories" where we don't want to categorize individual files inside.
 
 ## Configuration
 
