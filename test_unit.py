@@ -1,124 +1,125 @@
 import pytest
 from pathlib import Path
 from unittest.mock import patch, MagicMock
+import sys
 
 from main import (
-    calculate_dir_size,
-    categorize_file,
+    calculate_dir_size_recursive,
+    categorize_extension,
     format_size,
     get_top_n_per_category,
-    identify_special_dir,
+    identify_special_dir_name,
     scan_files_and_dirs,
-    is_skip_directory,
+    is_skip_path,
     print_results,
     main,
     MIN_FILE_SIZE,
     SKIP_DIRS,
 )
 from io import StringIO
+import os
 
 
-class TestCategorizeFile:
+class TestCategorizeExtension:
     """Test file categorization."""
 
     def test_picture_extensions(self):
-        assert categorize_file(Path("photo.jpg")) == "Pictures"
-        assert categorize_file(Path("image.PNG")) == "Pictures"
-        assert categorize_file(Path("graphic.svg")) == "Pictures"
-        assert categorize_file(Path("photo.heic")) == "Pictures"
+        assert categorize_extension(".jpg") == "Pictures"
+        assert categorize_extension(".PNG") == "Pictures"
+        assert categorize_extension(".svg") == "Pictures"
+        assert categorize_extension(".heic") == "Pictures"
 
     def test_document_extensions(self):
-        assert categorize_file(Path("doc.pdf")) == "Documents"
-        assert categorize_file(Path("sheet.xlsx")) == "Documents"
-        assert categorize_file(Path("note.txt")) == "Documents"
-        assert categorize_file(Path("presentation.pptx")) == "Documents"
+        assert categorize_extension(".pdf") == "Documents"
+        assert categorize_extension(".xlsx") == "Documents"
+        assert categorize_extension(".txt") == "Documents"
+        assert categorize_extension(".pptx") == "Documents"
 
     def test_code_extensions(self):
-        assert categorize_file(Path("script.py")) == "Code"
-        assert categorize_file(Path("app.js")) == "Code"
-        assert categorize_file(Path("main.rs")) == "Code"
-        assert categorize_file(Path("component.tsx")) == "Code"
+        assert categorize_extension(".py") == "Code"
+        assert categorize_extension(".js") == "Code"
+        assert categorize_extension(".rs") == "Code"
+        assert categorize_extension(".tsx") == "Code"
 
     def test_video_extensions(self):
-        assert categorize_file(Path("movie.mp4")) == "Videos"
-        assert categorize_file(Path("clip.mkv")) == "Videos"
-        assert categorize_file(Path("video.webm")) == "Videos"
+        assert categorize_extension(".mp4") == "Videos"
+        assert categorize_extension(".mkv") == "Videos"
+        assert categorize_extension(".webm") == "Videos"
 
     def test_music_extensions(self):
-        assert categorize_file(Path("song.mp3")) == "Music"
-        assert categorize_file(Path("track.flac")) == "Music"
-        assert categorize_file(Path("audio.m4a")) == "Music"
+        assert categorize_extension(".mp3") == "Music"
+        assert categorize_extension(".flac") == "Music"
+        assert categorize_extension(".m4a") == "Music"
 
     def test_archive_extensions(self):
-        assert categorize_file(Path("archive.zip")) == "Archives"
-        assert categorize_file(Path("compressed.tar.gz")) == "Archives"
-        assert categorize_file(Path("data.7z")) == "Archives"
+        assert categorize_extension(".zip") == "Archives"
+        assert categorize_extension(".gz") == "Archives"
+        assert categorize_extension(".7z") == "Archives"
 
     def test_json_yaml_extensions(self):
-        assert categorize_file(Path("config.yml")) == "JSON/YAML"
-        assert categorize_file(Path("data.json")) == "JSON/YAML"
+        assert categorize_extension(".yml") == "JSON/YAML"
+        assert categorize_extension(".json") == "JSON/YAML"
 
     def test_unknown_extension(self):
-        assert categorize_file(Path("file.xyz")) == "Others"
-        assert categorize_file(Path("noext")) == "Others"
-        assert categorize_file(Path("file.")) == "Others"
-        assert categorize_file(Path(".hiddenfile")) == "Others"
+        assert categorize_extension(".xyz") == "Others"
+        assert categorize_extension("") == "Others"
+        assert categorize_extension(".") == "Others"
 
 
-class TestIdentifySpecialDir:
+class TestIdentifySpecialDirName:
     """Test special directory identification."""
 
     def test_virtual_environments(self):
-        assert identify_special_dir(Path("/project/.venv")) == "Virtual Environments"
-        assert identify_special_dir(Path("/app/venv")) == "Virtual Environments"
-        assert identify_special_dir(Path("/code/env")) == "Virtual Environments"
+        assert identify_special_dir_name(".venv") == "Virtual Environments"
+        assert identify_special_dir_name("venv") == "Virtual Environments"
+        assert identify_special_dir_name("env") == "Virtual Environments"
 
     def test_node_modules(self):
-        assert identify_special_dir(Path("/project/node_modules")) == "Node Modules"
+        assert identify_special_dir_name("node_modules") == "Node Modules"
 
     def test_git_repos(self):
-        assert identify_special_dir(Path("/repo/.git")) == "Git Repos"
+        assert identify_special_dir_name(".git") == "Git Repos"
 
     def test_build_artifacts(self):
-        assert identify_special_dir(Path("/rust/target")) == "Build Artifacts"
-        assert identify_special_dir(Path("/java/build")) == "Build Artifacts"
-        assert identify_special_dir(Path("/app/dist")) == "Build Artifacts"
+        assert identify_special_dir_name("target") == "Build Artifacts"
+        assert identify_special_dir_name("build") == "Build Artifacts"
+        assert identify_special_dir_name("dist") == "Build Artifacts"
 
     def test_macos_apps(self):
-        assert identify_special_dir(Path("/Applications/Safari.app")) == "macOS Apps"
-        assert identify_special_dir(Path("/Apps/MyApp.app")) == "macOS Apps"
+        assert identify_special_dir_name("Safari.app") == "macOS Apps"
+        assert identify_special_dir_name("MyApp.app") == "macOS Apps"
 
     def test_package_caches(self):
-        assert identify_special_dir(Path("/home/.npm")) == "Package Caches"
-        assert identify_special_dir(Path("/user/.m2")) == "Package Caches"
-        assert identify_special_dir(Path("/code/__pycache__")) == "Package Caches"
+        assert identify_special_dir_name(".npm") == "Package Caches"
+        assert identify_special_dir_name(".m2") == "Package Caches"
+        assert identify_special_dir_name("__pycache__") == "Package Caches"
 
     def test_ide_config(self):
-        assert identify_special_dir(Path("/project/.idea")) == "IDE Config"
-        assert identify_special_dir(Path("/app/.vscode")) == "IDE Config"
+        assert identify_special_dir_name(".idea") == "IDE Config"
+        assert identify_special_dir_name(".vscode") == "IDE Config"
 
     def test_normal_directory(self):
-        assert identify_special_dir(Path("/regular/directory")) is None
-        assert identify_special_dir(Path("/home/documents")) is None
+        assert identify_special_dir_name("directory") is None
+        assert identify_special_dir_name("documents") is None
 
 
-class TestShouldSkipDirectory:
+class TestShouldSkipPath:
     """Test system directory skipping."""
 
     def test_linux_system_dirs(self):
-        assert is_skip_directory(Path("/dev"))
-        assert is_skip_directory(Path("/proc"))
-        assert is_skip_directory(Path("/sys"))
+        assert is_skip_path("/dev")
+        assert is_skip_path("/proc")
+        assert is_skip_path("/sys")
 
     def test_macos_system_dirs(self):
-        assert is_skip_directory(Path("/System"))
-        assert is_skip_directory(Path("/Library"))
-        assert is_skip_directory(Path("/private/var"))
+        assert is_skip_path("/System")
+        assert is_skip_path("/Library")
+        assert is_skip_path("/private/var")
 
     def test_normal_dirs(self):
-        assert not is_skip_directory(Path("/home"))
-        assert not is_skip_directory(Path("/Users"))
-        assert not is_skip_directory(Path("/tmp"))
+        assert not is_skip_path("/home")
+        assert not is_skip_path("/Users")
+        assert not is_skip_path("/tmp")
 
 
 class TestFormatSize:
@@ -145,12 +146,12 @@ class TestFormatSize:
         assert format_size(1024 * 1024 * 1024 * 1024) == "1.00 TB"
 
 
-class TestCalculateDirSize:
+class TestCalculateDirSizeRecursive:
     """Test directory size calculation."""
 
     def test_empty_directory(self, fs):
         fs.create_dir("/empty")
-        size = calculate_dir_size(Path("/empty"))
+        size = calculate_dir_size_recursive("/empty")
         assert size == 0
 
     def test_directory_with_files(self, fs):
@@ -158,7 +159,7 @@ class TestCalculateDirSize:
         fs.create_file("/test/file1.txt", contents="a" * 1000)
         fs.create_file("/test/file2.txt", contents="b" * 2000)
 
-        size = calculate_dir_size(Path("/test"))
+        size = calculate_dir_size_recursive("/test")
         # Should be at least the content size
         assert size >= 3000
 
@@ -168,11 +169,11 @@ class TestCalculateDirSize:
         fs.create_file("/test/root.txt", contents="root" * 100)
         fs.create_file("/test/subdir/nested.txt", contents="nested" * 100)
 
-        size = calculate_dir_size(Path("/test"))
+        size = calculate_dir_size_recursive("/test")
         assert size >= 1000
 
     def test_nonexistent_directory(self):
-        size = calculate_dir_size(Path("/nonexistent/directory/path"))
+        size = calculate_dir_size_recursive("/nonexistent/directory/path")
         assert size == 0
 
     def test_directory_with_permission_error(self, fs, monkeypatch):
@@ -183,7 +184,7 @@ class TestCalculateDirSize:
 
         monkeypatch.setattr("os.scandir", mock_scandir)
 
-        size = calculate_dir_size(Path("/noaccess"))
+        size = calculate_dir_size_recursive("/noaccess")
         assert size == 0
 
 
@@ -197,9 +198,9 @@ class TestGetTopNPerCategory:
     def test_single_category(self):
         test_data = {
             "Documents": [
-                (1000, Path("small.doc")),
-                (5000, Path("medium.doc")),
-                (3000, Path("middle.doc")),
+                (1000, "small.doc"),
+                (5000, "medium.doc"),
+                (3000, "middle.doc"),
             ]
         }
         result = get_top_n_per_category(test_data, top_n=2)
@@ -209,8 +210,8 @@ class TestGetTopNPerCategory:
 
     def test_multiple_categories(self):
         test_data = {
-            "Documents": [(1000, Path("doc1.pdf")), (2000, Path("doc2.pdf"))],
-            "Pictures": [(3000, Path("img1.jpg")), (4000, Path("img2.jpg"))],
+            "Documents": [(1000, "doc1.pdf"), (2000, "doc2.pdf")],
+            "Pictures": [(3000, "img1.jpg"), (4000, "img2.jpg")],
         }
         result = get_top_n_per_category(test_data, top_n=1)
         assert len(result["Documents"]) == 1
@@ -229,7 +230,7 @@ class TestScanFilesAndDirs:
 
         fs.create_dir("/empty")
         file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
-            Path("/empty"), used=100000, min_size=MIN_FILE_SIZE
+            Path("/empty"), used_bytes=100000, min_size=MIN_FILE_SIZE
         )
 
         assert file_count == 0
@@ -248,7 +249,7 @@ class TestScanFilesAndDirs:
         fs.create_file("/test/tiny3.py", contents="x")
 
         file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
-            Path("/test"), used=100000, min_size=MIN_FILE_SIZE
+            Path("/test"), used_bytes=100000, min_size=MIN_FILE_SIZE
         )
 
         assert file_count == 4  # File is counted
@@ -267,7 +268,7 @@ class TestScanFilesAndDirs:
         fs.create_file("/test/image.jpg", contents="x" * MIN_FILE_SIZE)
 
         file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
-            Path("/test"), used=100000, min_size=MIN_FILE_SIZE
+            Path("/test"), used_bytes=100000, min_size=MIN_FILE_SIZE
         )
 
         assert file_count == 2
@@ -282,14 +283,10 @@ class TestScanFilesAndDirs:
         mock_tqdm.return_value.__enter__.return_value = mock_pbar
 
         # Should handle gracefully
-        result = scan_files_and_dirs(Path("/nonexistent/path"), used=100000)
+        result = scan_files_and_dirs(Path("/nonexistent/path"), used_bytes=100000)
         # Returns empty results for nonexistent path
         assert result[2] == 0  # file_count
         assert result[3] == 0  # total_size
-
-
-class TestFileSystem:
-    """Test with a realistic filesystem structure containing various file types and directories."""
 
     @patch("main.tqdm")
     def test_complex_filesystem_scan(self, mock_tqdm, fs):
@@ -319,7 +316,7 @@ class TestFileSystem:
         fs.create_file("/test/dev/device.file", contents="x" * (MIN_FILE_SIZE + 10000))
 
         file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
-            Path("/test"), used=100000000, min_size=MIN_FILE_SIZE
+            Path("/test"), used_bytes=100000000, min_size=MIN_FILE_SIZE
         )
 
         # Verify file categories
@@ -334,18 +331,20 @@ class TestFileSystem:
 
         # Verify small file was filtered out
         documents = file_cats.get("Documents", [])
-        document_files = [Path(f[1]).name for f in documents]
+        # Results are now strings in the second part of the tuple
+        document_files = [os.path.basename(f[1]) for f in documents]
         assert "small.txt" not in document_files  # Should be filtered by size
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="Test specific to Unix-like systems")
     @patch("main.tqdm")
-    @patch("main.is_skip_directory")
+    @patch("main.is_skip_path")
     def test_skip_directories_respected(self, mock_is_skip, mock_tqdm, fs):
         """Test that system directories are properly skipped."""
         mock_pbar = MagicMock()
         mock_tqdm.return_value.__enter__.return_value = mock_pbar
 
-        def is_skip_side_effect(dirpath):
-            return str(dirpath) in {str(s) for s in SKIP_DIRS}
+        def is_skip_side_effect(path_str):
+            return path_str in SKIP_DIRS
 
         mock_is_skip.side_effect = is_skip_side_effect
 
@@ -358,13 +357,13 @@ class TestFileSystem:
         fs.create_file("/home/user/user_doc.pdf", contents="x" * MIN_FILE_SIZE)
 
         file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
-            Path("/"), used=100000000, min_size=MIN_FILE_SIZE
+            Path("/"), used_bytes=100000000, min_size=MIN_FILE_SIZE
         )
 
         # Files in skipped directories should not be included
         all_files = []
         for category_files in file_cats.values():
-            all_files.extend([Path(f[1]).name for f in category_files])
+            all_files.extend([os.path.basename(f[1]) for f in category_files])
 
         assert "should_be_skipped.file" not in all_files
         assert "also_skipped.file" not in all_files
@@ -390,7 +389,7 @@ class TestFileSystem:
         fs.create_file("/project/venv/python", contents="x" * MIN_FILE_SIZE)
 
         file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
-            Path("/project"), used=100000000, min_size=MIN_FILE_SIZE
+            Path("/project"), used_bytes=100000000, min_size=MIN_FILE_SIZE
         )
 
         # Verify special directories were categorized
@@ -419,7 +418,7 @@ class TestFileSystem:
         fs.create_file("/mixed/large_archive.zip", contents="x" * (MIN_FILE_SIZE * 5))
 
         file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
-            Path("/mixed"), used=100000000, min_size=MIN_FILE_SIZE
+            Path("/mixed"), used_bytes=100000000, min_size=MIN_FILE_SIZE
         )
 
         # Verify only files above minimum size are categorized
@@ -430,15 +429,16 @@ class TestFileSystem:
         # At least some files should be categorized
         assert len(file_cats) > 0
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="Test specific to Unix-like systems")
     @patch("main.tqdm")
-    @patch("main.is_skip_directory")
+    @patch("main.is_skip_path")
     def test_skip_directories_in_nested_paths(self, mock_is_skip, mock_tqdm, fs):
         """Test that system directories are skipped even when nested in scan path."""
         mock_pbar = MagicMock()
         mock_tqdm.return_value.__enter__.return_value = mock_pbar
 
-        def is_skip_side_effect(dirpath):
-            return str(dirpath) in {str(s) for s in SKIP_DIRS}
+        def is_skip_side_effect(path_str):
+            return path_str in SKIP_DIRS
 
         mock_is_skip.side_effect = is_skip_side_effect
 
@@ -448,13 +448,13 @@ class TestFileSystem:
         fs.create_file("/usr/bin/binary", contents="x" * MIN_FILE_SIZE)
 
         file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
-            Path("/"), used=1000000, min_size=MIN_FILE_SIZE
+            Path("/"), used_bytes=1000000, min_size=MIN_FILE_SIZE
         )
 
         # Collect all scanned files
         all_files = []
         for category_files in file_cats.values():
-            all_files.extend([Path(f[1]).name for f in category_files])
+            all_files.extend([os.path.basename(f[1]) for f in category_files])
 
         # Files in /dev should not appear
         assert "skip.file" not in all_files
@@ -472,7 +472,7 @@ class TestFileSystem:
         fs.create_file("/small_files/tiny3.py", contents="x")
 
         file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
-            Path("/small_files"), used=1000000, min_size=MIN_FILE_SIZE
+            Path("/small_files"), used_bytes=1000000, min_size=MIN_FILE_SIZE
         )
 
         assert file_count == 3  # Files are still counted
@@ -499,7 +499,7 @@ class TestFileSystem:
         )
 
         file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
-            Path("/deep"), used=1000000, min_size=MIN_FILE_SIZE
+            Path("/deep"), used_bytes=1000000, min_size=MIN_FILE_SIZE
         )
 
         assert file_count == 5  # 5 levels
@@ -518,8 +518,8 @@ class TestPrintResults:
             assert "SPECIAL DIRECTORIES" not in output
 
     def test_print_populated_results(self):
-        file_cats = {"Documents": [(1024, Path("/doc.pdf"))]}
-        dir_cats = {"Node Modules": [(2048, Path("/node_modules"))]}
+        file_cats = {"Documents": [(1024, "/doc.pdf")]}
+        dir_cats = {"Node Modules": [(2048, "/node_modules")]}
 
         with patch("sys.stdout", new=StringIO()) as fake_out:
             print_results(file_cats, dir_cats, 80)
@@ -596,7 +596,7 @@ class TestSymlinkHandling:
         # Scan should complete without infinite recursion
         # We set a timeout or just rely on the test finishing
         file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
-            Path("/test"), used=100000, min_size=MIN_FILE_SIZE
+            Path("/test"), used_bytes=100000, min_size=MIN_FILE_SIZE
         )
 
         # Should count the real file
@@ -612,33 +612,38 @@ class TestSymlinkHandling:
         fs.create_symlink("/test/link_file.txt", "/test/real_file.txt")
 
         file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
-            Path("/test"), used=100000, min_size=MIN_FILE_SIZE
+            Path("/test"), used_bytes=100000, min_size=MIN_FILE_SIZE
         )
 
         # Should only count the real file, not the symlink
         assert file_count == 1
 
-    @patch("main.tqdm")
-    def test_scan_symlinked_directory(self, mock_tqdm, fs):
-        """Test scanning a directory that is itself a symlink (like /tmp -> /private/tmp)."""
-        mock_pbar = MagicMock()
-        mock_tqdm.return_value.__enter__.return_value = mock_pbar
+    def test_symlink_rejection_in_main(self):
+        """Test that main() rejects symlinks."""
+        with (
+            patch("sys.argv", ["main.py", "/tmp/link"]),
+            patch("pathlib.Path.expanduser") as mock_expand,
+            patch("pathlib.Path.is_symlink", return_value=True),
+            patch("pathlib.Path.is_dir", return_value=True),
+            patch("pathlib.Path.resolve", return_value=Path("/real/path")),
+            patch("pathlib.Path.exists", return_value=True),
+            patch("main.get_disk_usage", return_value=(100, 50, 50)),
+            patch("shutil.get_terminal_size") as mock_term,
+            patch("sys.exit") as mock_exit,
+            patch("builtins.print") as mock_print,
+        ):
+            mock_expand.return_value = Path("/tmp/link")
+            mock_term.return_value.columns = 80
 
-        # Create real directory with content
-        fs.create_dir("/private/tmp/test")
-        fs.create_file("/private/tmp/test/file.txt", contents="x" * MIN_FILE_SIZE)
+            import main as main_module
 
-        # Create symlink to it
-        fs.create_symlink("/tmp/test", "/private/tmp/test")
+            try:
+                main_module.main()
+            except Exception:
+                pass
 
-        # Scan the symlinked path
-        file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
-            Path("/tmp/test"), used=100000, min_size=MIN_FILE_SIZE
-        )
-
-        # Should follow the root symlink and find the file
-        assert file_count == 1
-        assert total_size > 0
+            mock_exit.assert_not_called()
+            mock_print.assert_any_call(f"Attention - you provided a symlink: {Path('/tmp/link')}")
 
 
 class TestUnicodeHandling:
@@ -655,7 +660,7 @@ class TestUnicodeHandling:
         fs.create_file("/test/こんにちは.doc", contents="x" * MIN_FILE_SIZE)
 
         file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
-            Path("/test"), used=100000, min_size=MIN_FILE_SIZE
+            Path("/test"), used_bytes=100000, min_size=MIN_FILE_SIZE
         )
 
         assert file_count == 3
@@ -663,7 +668,7 @@ class TestUnicodeHandling:
         assert "Pictures" in file_cats
 
         # Verify names are preserved
-        all_files = [Path(f[1]).name for cat in file_cats.values() for f in cat]
+        all_files = [os.path.basename(f[1]) for cat in file_cats.values() for f in cat]
         assert "café.txt" in all_files
         assert "🚀.png" in all_files
         assert "こんにちは.doc" in all_files

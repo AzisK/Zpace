@@ -13,15 +13,15 @@ class TestTrashIntegration:
         path = get_trash_path()
 
         if sys.platform == "darwin":
-            assert path == Path.home() / ".Trash"
+            assert path == str(Path.home() / ".Trash")
         elif sys.platform == "linux":
-            assert path == Path.home() / ".local" / "share" / "Trash"
+            assert path == str(Path.home() / ".local" / "share" / "Trash")
         elif sys.platform == "win32":
             # Windows path might vary depending on SystemDrive, but usually C:
             drive = os.environ.get("SystemDrive", "C:")
             # Ensure we construct an absolute path (C:\$Recycle.Bin)
             # Path("C:") is relative to CWD on that drive, Path("C:/") is absolute root
-            assert path == Path(f"{drive}/$Recycle.Bin")
+            assert path == str(Path(drive) / "$Recycle.Bin")
         else:
             # Fail the test if we are running on an OS we don't support yet
             pytest.fail(

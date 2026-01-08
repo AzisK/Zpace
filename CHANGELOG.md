@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-01-08
+
+### Features
+- **Performance**: Refactored file scanning to use an iterative `os.scandir` approach and string-based path handling, significantly improving performance and reducing memory usage.
+- **Symlink Handling**: The tool now explicitly detects and rejects symlinks as the initial scan path, preventing unexpected behavior.
+
+### Improvements
+- **CI**: Switched GitHub Actions runners to `ubuntu-slim` to optimize resource usage.
+
+### Fixes
+- **Path Resolution**: Improved path resolution in the main scanning function.
+- **Trash Size Check**: Made the trash size calculation more robust.
+
+
 ## [0.2.0] - 2025-12-03
 
 ### Features
