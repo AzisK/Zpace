@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.1] - 2026-01-10
+
+### Features
+- **CLI**: Added `--version` argument to allow users to check the installed version of the tool.
+
+### Documentation
+- Added `AGENTS.md` to define best practices for AI agent interactions with the codebase.
+
 ## [0.3.0] - 2026-01-08
 
 ### Features
