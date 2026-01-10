@@ -1,4 +1,5 @@
 import argparse
+import importlib.metadata
 import os
 import shutil
 from collections import defaultdict
@@ -320,8 +321,20 @@ def get_trash_path() -> Optional[str]:
 
 
 def main():
+    try:
+        __version__ = importlib.metadata.version("zpace")
+    except importlib.metadata.PackageNotFoundError:
+        __version__ = "0.0.0-dev"
+
     parser = argparse.ArgumentParser(
         description="Analyze disk usage and find largest files and directories by category"
+    )
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
+        help="Show program's version number and exit.",
     )
     parser.add_argument(
         "path",
