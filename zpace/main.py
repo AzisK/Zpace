@@ -12,7 +12,7 @@ from zpace.config import (
 )
 from zpace.utils import get_disk_usage, format_size, get_trash_path
 from zpace.core import (
-    calculate_dir_size_recursive,
+    calculate_dir_size,
     scan_files_and_dirs,
     get_top_n_per_category,
 )
@@ -130,7 +130,7 @@ def main():
                 try:
                     # Verify we can actually list it (os.access might lie on some systems/containers)
                     next(os.scandir(trash_path), None)
-                    trash_size = calculate_dir_size_recursive(trash_path)
+                    trash_size = calculate_dir_size(trash_path)
                     additional_message = ""
                     if trash_size > 1000 * 1024 * 1024:  # 1000 MB
                         additional_message = " (Consider cleanin up your trash bin!)"

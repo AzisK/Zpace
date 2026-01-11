@@ -28,7 +28,7 @@ The tool uses an iterative, stack-based, depth-first search approach with `os.sc
 - **`scan_files_and_dirs(root_path, used_bytes, min_size)` in `zpace/core.py`**: The main driver function. It uses an iterative, stack-based approach with `os.scandir` to traverse the directory tree, handles special directories, and aggregates file/directory statistics.
 - **`categorize_extension(extension)` in `zpace/core.py`**: Determines the category of a file based on its extension.
 - **`identify_special_dir_name(dirname)` in `zpace/core.py`**: Checks if a directory is a "special" directory.
-- **`calculate_dir_size_recursive(dirpath)` in `zpace/core.py`**: Recursively calculates the size of a directory. Used for "special directories" where we don't want to categorize individual files inside.
+- **`calculate_dir_size(dirpath)` in `zpace/core.py`**: Iteratively calculates the size of a directory. Used for "special directories" where we don't want to categorize individual files inside. Replaces the recursive implementation to avoid stack overflow on deep directory structures.
 - **`main()` in `zpace/main.py`**: Handles command-line argument parsing and orchestrates the scanning and printing of results.
 
 ## Configuration
