@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] - 2026-01-11
+
+### Refactoring
+- **Project Structure**: Refactored the monolithic `main.py` into a modular package structure under the `zpace/` directory. This improves maintainability, separation of concerns, and scalability.
+  - `zpace/main.py`: Handles CLI argument parsing and high-level orchestration.
+  - `zpace/core.py`: Contains the core scanning and categorization logic.
+  - `zpace/config.py`: Centralizes all configuration constants.
+  - `zpace/utils.py`: Includes helper functions for size formatting and platform-specific paths.
+
+### Documentation
+- **Architecture**: Updated `ARCHITECTURE.md` to reflect the new modular project structure and data flow.
+- **README**: Updated the "Project Structure" and "Development" sections in `README.md` to match the refactored code.
+
+### Tests
+- **Test Suite**: Fixed all unit and integration tests that were broken by the refactoring. Updated import paths and mock targets to align with the new package structure.
+
 ## [0.3.1] - 2026-01-10
 
 ### Features
@@ -11,6 +27,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Documentation
 - Added `AGENTS.md` to define best practices for AI agent interactions with the codebase.
+
 
 ## [0.3.0] - 2026-01-08
 
