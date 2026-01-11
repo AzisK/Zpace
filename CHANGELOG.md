@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.1] - 2026-01-11
+
+### Performance
+- **Heap Sort**: Switched to `heapq.nlargest` for selecting top files, improving performance from $O(N \log N)$ to $O(N \log k)$.
+- **Iterative Traversal**: Converted `calculate_dir_size` to use an iterative stack-based approach instead of recursion, preventing `RecursionError` in deeply nested directories.
+
 ## [0.4.0] - 2026-01-11
 
 ### Refactoring

@@ -1,4 +1,5 @@
 import os
+import heapq
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -37,28 +38,32 @@ def identify_special_dir_name(dirname: str) -> Optional[str]:
     return SPECIAL_DIR_MAP.get(dirname.lower())
 
 
-def calculate_dir_size_recursive(dirpath: str) -> int:
+def calculate_dir_size(dirpath: str) -> int:
     """
-    Calculate total size of directory using os.scandir recursively.
+    Calculate total size of directory using os.scandir iteratively.
     """
     total_size = 0
-    try:
-        with os.scandir(dirpath) as it:
-            for entry in it:
-                try:
-                    if entry.is_file(follow_symlinks=False):
-                        stat = entry.stat(follow_symlinks=False)
-                        # st_blocks is 512-byte blocks. reliable on unix.
-                        # fallback to st_size if not available (e.g. windows sometimes)
-                        total_size += (
-                            stat.st_blocks * 512 if hasattr(stat, "st_blocks") else stat.st_size
-                        )
-                    elif entry.is_dir(follow_symlinks=False):
-                        total_size += calculate_dir_size_recursive(entry.path)
-                except (FileNotFoundError, PermissionError, OSError):
-                    continue
-    except (FileNotFoundError, PermissionError, OSError):
-        pass
+    stack = [dirpath]
+
+    while stack:
+        current_path = stack.pop()
+        try:
+            with os.scandir(current_path) as it:
+                for entry in it:
+                    try:
+                        if entry.is_file(follow_symlinks=False):
+                            stat = entry.stat(follow_symlinks=False)
+                            # st_blocks is 512-byte blocks. reliable on unix.
+                            # fallback to st_size if not available (e.g. windows sometimes)
+                            total_size += (
+                                stat.st_blocks * 512 if hasattr(stat, "st_blocks") else stat.st_size
+                            )
+                        elif entry.is_dir(follow_symlinks=False):
+                            stack.append(entry.path)
+                    except (FileNotFoundError, PermissionError, OSError):
+                        continue
+        except (FileNotFoundError, PermissionError, OSError):
+            continue
 
     return total_size
 
@@ -109,7 +114,7 @@ def scan_files_and_dirs(
                                 special_type = identify_special_dir_name(dirname)
                                 if special_type:
                                     # Calculate size as atomic unit
-                                    dir_size = calculate_dir_size_recursive(entry_path)
+                                    dir_size = calculate_dir_size(entry_path)
 
                                     if dir_size >= min_size:
                                         # Storing string path instead of Path object
@@ -166,6 +171,7 @@ def get_top_n_per_category(
 ) -> Dict[str, List[Tuple[int, str]]]:
     result = {}
     for category, entries in categorized.items():
-        sorted_entries = sorted(entries, key=lambda x: x[0], reverse=True)
-        result[category] = sorted_entries[:top_n]
+        # Use heapq.nlargest for O(N log k) complexity instead of O(N log N)
+        top_entries = heapq.nlargest(top_n, entries, key=lambda x: x[0])
+        result[category] = top_entries
     return result

@@ -4,7 +4,7 @@ from unittest.mock import patch, MagicMock
 import sys
 
 from zpace.core import (
-    calculate_dir_size_recursive,
+    calculate_dir_size,
     categorize_extension,
     get_top_n_per_category,
     identify_special_dir_name,
@@ -144,12 +144,12 @@ class TestFormatSize:
         assert format_size(1024 * 1024 * 1024 * 1024) == "1.00 TB"
 
 
-class TestCalculateDirSizeRecursive:
+class TestCalculateDirSize:
     """Test directory size calculation."""
 
     def test_empty_directory(self, fs):
         fs.create_dir("/empty")
-        size = calculate_dir_size_recursive("/empty")
+        size = calculate_dir_size("/empty")
         assert size == 0
 
     def test_directory_with_files(self, fs):
@@ -157,7 +157,7 @@ class TestCalculateDirSizeRecursive:
         fs.create_file("/test/file1.txt", contents="a" * 1000)
         fs.create_file("/test/file2.txt", contents="b" * 2000)
 
-        size = calculate_dir_size_recursive("/test")
+        size = calculate_dir_size("/test")
         # Should be at least the content size
         assert size >= 3000
 
@@ -167,11 +167,11 @@ class TestCalculateDirSizeRecursive:
         fs.create_file("/test/root.txt", contents="root" * 100)
         fs.create_file("/test/subdir/nested.txt", contents="nested" * 100)
 
-        size = calculate_dir_size_recursive("/test")
+        size = calculate_dir_size("/test")
         assert size >= 1000
 
     def test_nonexistent_directory(self):
-        size = calculate_dir_size_recursive("/nonexistent/directory/path")
+        size = calculate_dir_size("/nonexistent/directory/path")
         assert size == 0
 
     def test_directory_with_permission_error(self, fs, monkeypatch):
@@ -182,7 +182,7 @@ class TestCalculateDirSizeRecursive:
 
         monkeypatch.setattr("os.scandir", mock_scandir)
 
-        size = calculate_dir_size_recursive("/noaccess")
+        size = calculate_dir_size("/noaccess")
         assert size == 0
 
 
