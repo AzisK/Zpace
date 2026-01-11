@@ -343,7 +343,7 @@ cd zpace
 uv sync
 
 # Run locally
-uv run python main.py
+uv run zpace
 ```
 
 ### Code Quality
@@ -377,7 +377,13 @@ uv run pytest test_.py -v
 ### Project Structure
 ```
 zpace/
-├── main.py           # Main application code
+├── zpace/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── core.py
+│   ├── config.py
+│   └── utils.py
+├── main.py           # Entry point
 ├── pyproject.toml    # Project configuration
 ├── README.md         # This file
 └── CHANGELOG.md      # Version history

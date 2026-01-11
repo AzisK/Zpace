@@ -2,7 +2,7 @@ import sys
 import os
 from pathlib import Path
 import pytest
-from main import get_trash_path
+from zpace.utils import get_trash_path
 
 
 class TestTrashIntegration:

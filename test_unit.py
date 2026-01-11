@@ -3,19 +3,17 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 import sys
 
-from main import (
+from zpace.core import (
     calculate_dir_size_recursive,
     categorize_extension,
-    format_size,
     get_top_n_per_category,
     identify_special_dir_name,
     scan_files_and_dirs,
     is_skip_path,
-    print_results,
-    main,
-    MIN_FILE_SIZE,
-    SKIP_DIRS,
 )
+from zpace.utils import format_size
+from zpace.main import print_results, main
+from zpace.config import MIN_FILE_SIZE, SKIP_DIRS
 from io import StringIO
 import os
 
@@ -223,7 +221,7 @@ class TestGetTopNPerCategory:
 class TestScanFilesAndDirs:
     """Test the main scanning functionality."""
 
-    @patch("main.tqdm")
+    @patch("zpace.core.tqdm")
     def test_scan_empty_directory(self, mock_tqdm, fs):
         mock_pbar = MagicMock()
         mock_tqdm.return_value.__enter__.return_value = mock_pbar
@@ -238,7 +236,7 @@ class TestScanFilesAndDirs:
         assert file_cats == {}
         assert dir_cats == {}
 
-    @patch("main.tqdm")
+    @patch("zpace.core.tqdm")
     def test_scan_with_files_below_min_size(self, mock_tqdm, fs):
         mock_pbar = MagicMock()
         mock_tqdm.return_value.__enter__.return_value = mock_pbar
@@ -258,7 +256,7 @@ class TestScanFilesAndDirs:
         assert "Pictures" not in file_cats  # Too small to be categorized
         assert "Code" not in file_cats  # Too small to be categorized
 
-    @patch("main.tqdm")
+    @patch("zpace.core.tqdm")
     def test_scan_with_categorized_files(self, mock_tqdm, fs):
         mock_pbar = MagicMock()
         mock_tqdm.return_value.__enter__.return_value = mock_pbar
@@ -277,7 +275,7 @@ class TestScanFilesAndDirs:
         assert len(file_cats["Documents"]) == 1
         assert len(file_cats["Pictures"]) == 1
 
-    @patch("main.tqdm")
+    @patch("zpace.core.tqdm")
     def test_scan_nonexistent_directory(self, mock_tqdm):
         mock_pbar = MagicMock()
         mock_tqdm.return_value.__enter__.return_value = mock_pbar
@@ -288,7 +286,7 @@ class TestScanFilesAndDirs:
         assert result[2] == 0  # file_count
         assert result[3] == 0  # total_size
 
-    @patch("main.tqdm")
+    @patch("zpace.core.tqdm")
     def test_complex_filesystem_scan(self, mock_tqdm, fs):
         """Test scanning a complex filesystem with various file types and directories."""
         mock_pbar = MagicMock()
@@ -336,8 +334,8 @@ class TestScanFilesAndDirs:
         assert "small.txt" not in document_files  # Should be filtered by size
 
     @pytest.mark.skipif(sys.platform == "win32", reason="Test specific to Unix-like systems")
-    @patch("main.tqdm")
-    @patch("main.is_skip_path")
+    @patch("zpace.core.tqdm")
+    @patch("zpace.core.is_skip_path")
     def test_skip_directories_respected(self, mock_is_skip, mock_tqdm, fs):
         """Test that system directories are properly skipped."""
         mock_pbar = MagicMock()
@@ -375,7 +373,7 @@ class TestScanFilesAndDirs:
             or "system.file" in all_files
         )
 
-    @patch("main.tqdm")
+    @patch("zpace.core.tqdm")
     def test_special_directories_not_descended(self, mock_tqdm, fs):
         """Test that special directories are treated as atomic units and not descended into."""
         mock_pbar = MagicMock()
@@ -399,7 +397,7 @@ class TestScanFilesAndDirs:
         # Verify we have files from non-special directories
         assert "Code" in file_cats or "Documents" in file_cats
 
-    @patch("main.tqdm")
+    @patch("zpace.core.tqdm")
     def test_mixed_file_types_and_sizes(self, mock_tqdm, fs):
         """Test scanning with mixed file types and sizes."""
         mock_pbar = MagicMock()
@@ -430,8 +428,8 @@ class TestScanFilesAndDirs:
         assert len(file_cats) > 0
 
     @pytest.mark.skipif(sys.platform == "win32", reason="Test specific to Unix-like systems")
-    @patch("main.tqdm")
-    @patch("main.is_skip_path")
+    @patch("zpace.core.tqdm")
+    @patch("zpace.core.is_skip_path")
     def test_skip_directories_in_nested_paths(self, mock_is_skip, mock_tqdm, fs):
         """Test that system directories are skipped even when nested in scan path."""
         mock_pbar = MagicMock()
@@ -461,7 +459,7 @@ class TestScanFilesAndDirs:
         # Files outside /dev should appear
         assert len(all_files) > 0  # Some files should be found
 
-    @patch("main.tqdm")
+    @patch("zpace.core.tqdm")
     def test_only_small_files(self, mock_tqdm, fs):
         """Test directory with only files below minimum size."""
         mock_pbar = MagicMock()
@@ -479,7 +477,7 @@ class TestScanFilesAndDirs:
         assert total_size > 0  # Size is still accumulated
         assert file_cats == {}  # But no files meet the minimum size for categorization
 
-    @patch("main.tqdm")
+    @patch("zpace.core.tqdm")
     def test_deeply_nested_structure(self, mock_tqdm, fs):
         """Test scanning deeply nested directory structure."""
         mock_pbar = MagicMock()
@@ -536,9 +534,9 @@ class TestPrintResults:
 class TestMainArguments:
     """Test command line argument parsing."""
 
-    @patch("main.scan_files_and_dirs")
-    @patch("main.get_disk_usage")
-    @patch("main.print_results")
+    @patch("zpace.main.scan_files_and_dirs")
+    @patch("zpace.main.get_disk_usage")
+    @patch("zpace.main.print_results")
     def test_default_arguments(self, mock_print, mock_disk, mock_scan):
         mock_disk.return_value = (100, 50, 50)
         mock_scan.return_value = ({}, {}, 0, 0)
@@ -550,9 +548,9 @@ class TestMainArguments:
             args, _ = mock_scan.call_args
             assert args[0] == Path.home()
 
-    @patch("main.scan_files_and_dirs")
-    @patch("main.get_disk_usage")
-    @patch("main.print_results")
+    @patch("zpace.main.scan_files_and_dirs")
+    @patch("zpace.main.get_disk_usage")
+    @patch("zpace.main.print_results")
     def test_custom_arguments(self, mock_print, mock_disk, mock_scan):
         mock_disk.return_value = (100, 50, 50)
         mock_scan.return_value = ({}, {}, 0, 0)
@@ -580,7 +578,7 @@ class TestMainArguments:
 class TestSymlinkHandling:
     """Test symlink handling to prevent infinite loops."""
 
-    @patch("main.tqdm")
+    @patch("zpace.core.tqdm")
     def test_symlink_loop(self, mock_tqdm, fs):
         mock_pbar = MagicMock()
         mock_tqdm.return_value.__enter__.return_value = mock_pbar
@@ -603,7 +601,7 @@ class TestSymlinkHandling:
         assert file_count == 1
         # Should NOT count the symlinked file (as we don't follow symlinks)
 
-    @patch("main.tqdm")
+    @patch("zpace.core.tqdm")
     def test_symlink_to_file(self, mock_tqdm, fs):
         mock_pbar = MagicMock()
         mock_tqdm.return_value.__enter__.return_value = mock_pbar
@@ -627,7 +625,7 @@ class TestSymlinkHandling:
             patch("pathlib.Path.is_dir", return_value=True),
             patch("pathlib.Path.resolve", return_value=Path("/real/path")),
             patch("pathlib.Path.exists", return_value=True),
-            patch("main.get_disk_usage", return_value=(100, 50, 50)),
+            patch("zpace.main.get_disk_usage", return_value=(100, 50, 50)),
             patch("shutil.get_terminal_size") as mock_term,
             patch("sys.exit") as mock_exit,
             patch("builtins.print") as mock_print,
@@ -649,7 +647,7 @@ class TestSymlinkHandling:
 class TestUnicodeHandling:
     """Test handling of unicode filenames."""
 
-    @patch("main.tqdm")
+    @patch("zpace.core.tqdm")
     def test_unicode_filenames(self, mock_tqdm, fs):
         mock_pbar = MagicMock()
         mock_tqdm.return_value.__enter__.return_value = mock_pbar
