@@ -19,12 +19,36 @@ It's built to indentify the biggest chunks of data that could potentially free u
 
 ## Installation
 
-```bash
-uv tool install space
-```
+### macOS / Linux (Homebrew)
 
 ```bash
-pip install space
+brew tap AzisK/zpace
+brew install zpace
+```
+
+### Windows (Scoop)
+
+```powershell
+scoop bucket add zpace https://github.com/AzisK/scoop-zpace
+scoop install zpace
+```
+
+### Using uv
+
+```bash
+uv tool install zpace
+```
+
+### Using pipx
+
+```bash
+pipx install zpace
+```
+
+### Using pip
+
+```bash
+pip install zpace
 ```
 
 ## Usage
