@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.2] - 2026-01-17
+
+### Performance
+- **Streaming Top-N**: Replaced post-scan `heapq.nlargest` with in-scan min-heap filtering. Memory usage is now `O(categories × top_n)` instead of `O(files_over_min_size)`, and large file lists are no longer built.
+
+### Code Quality
+- Removed unused `get_top_n_per_category` function (top-N logic now integrated into scan).
+- Added clarifying comment for `DEEPEST_SKIP_LEVEL` optimization.
+- Added tests for `push_top_n` heap helper and top-N integration behavior.
+
 ## [0.4.1] - 2026-01-11
 
 ### Performance
