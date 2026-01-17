@@ -38,3 +38,11 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Update Homebrew tap
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.HOMEBREW_TAP_TOKEN }}" \
+            https://api.github.com/repos/AzisK/homebrew-zpace/dispatches \
+            -d '{"event_type":"update-formula","client_payload":{"version":"'"${GITHUB_REF#refs/tags/v}"'"}}'
