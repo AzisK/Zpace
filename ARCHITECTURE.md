@@ -20,15 +20,17 @@ Certain directories are treated as single units rather than traversing their con
 
 ### 3. Scanning Algorithm
 The tool uses an iterative, stack-based, depth-first search approach with `os.scandir`. This is more performant than the previous `os.walk` implementation as it avoids the overhead of `os.walk` and creating `pathlib.Path` objects in performance-critical sections.
-- **Optimization**: System directories (e.g., `/proc`, `/sys`, `/System`) are skipped to improve performance and avoid permission errors.
+- **Optimization**: System directories (e.g., `/proc`, `/sys`, `/System`) are skipped to improve performance and avoid permission errors. The `DEEPEST_SKIP_LEVEL` optimization avoids unnecessary lookups when scanning deep paths where system directories cannot exist.
+- **Streaming Top-N**: Instead of collecting all files and then selecting the largest, the scanner maintains a fixed-size min-heap per category during traversal. This reduces memory from `O(files)` to `O(categories × top_n)` and avoids building large intermediate lists.
 - **Progress Tracking**: A `tqdm` progress bar shows real-time scanning progress based on bytes processed.
 
 ## Key Functions
 
-- **`scan_files_and_dirs(root_path, used_bytes, min_size)` in `zpace/core.py`**: The main driver function. It uses an iterative, stack-based approach with `os.scandir` to traverse the directory tree, handles special directories, and aggregates file/directory statistics.
+- **`scan_files_and_dirs(root_path, used_bytes, min_size, top_n)` in `zpace/core.py`**: The main driver function. It uses an iterative, stack-based approach with `os.scandir` to traverse the directory tree, handles special directories, and maintains min-heaps to track only the top N largest items per category during traversal.
 - **`categorize_extension(extension)` in `zpace/core.py`**: Determines the category of a file based on its extension.
 - **`identify_special_dir_name(dirname)` in `zpace/core.py`**: Checks if a directory is a "special" directory.
 - **`calculate_dir_size(dirpath)` in `zpace/core.py`**: Iteratively calculates the size of a directory. Used for "special directories" where we don't want to categorize individual files inside. Replaces the recursive implementation to avoid stack overflow on deep directory structures.
+- **`push_top_n(heap, item, n)` in `zpace/core.py`**: Maintains a min-heap of size `n` with the largest items. Used during scanning to keep only the top N files/directories per category without storing all matches.
 - **`main()` in `zpace/main.py`**: Handles command-line argument parsing and orchestrates the scanning and printing of results.
 
 ## Configuration
