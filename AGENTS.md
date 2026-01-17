@@ -12,7 +12,7 @@ Before making any changes, thoroughly understand the context.
 
 ## 2. Write High-Quality Code
 
-All code modifications should meet high standards.
+All code modifications meet high standards.
 
 - **Mimic Style:** Match the style, structure, and architectural patterns of the existing code in the project.
 - **Add Tests:** All new features and bug fixes must be accompanied by corresponding unit or integration tests to ensure correctness and prevent regressions.

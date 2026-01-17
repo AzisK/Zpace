@@ -391,8 +391,14 @@ uv run pre-commit run --all-files
 ### Testing
 
 ```bash
-# Run tests
-uv run pytest test_.py -v
+# Run all tests
+uv run pytest -v
+
+# Run unit tests only
+uv run pytest test_unit.py -v
+
+# Run integration tests only
+uv run pytest test_integration.py -v
 
 # Test across multiple Python versions (optional)
 ./testVersions.sh
