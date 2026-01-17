@@ -14,7 +14,6 @@ from zpace.utils import get_disk_usage, format_size, get_trash_path
 from zpace.core import (
     calculate_dir_size,
     scan_files_and_dirs,
-    get_top_n_per_category,
 )
 
 
@@ -133,7 +132,7 @@ def main():
                     trash_size = calculate_dir_size(trash_path)
                     additional_message = ""
                     if trash_size > 1000 * 1024 * 1024:  # 1000 MB
-                        additional_message = " (Consider cleanin up your trash bin!)"
+                        additional_message = " (Consider cleaning up your trash bin!)"
                     print(f"  Trash: {format_size(trash_size)}{additional_message}")
                 except PermissionError:
                     print("  Trash: Access Denied")
@@ -157,10 +156,9 @@ def main():
         print(f"If you wish to analyse the symlinked directory, please pass its path: {resolved}")
         return
 
-    # Scan files and directories
     try:
-        file_cats, dir_cats, total_files, total_size = scan_files_and_dirs(
-            scan_path, used, args.min_size * 1024
+        top_files, top_dirs, total_files, total_size = scan_files_and_dirs(
+            scan_path, used, args.min_size * 1024, top_n=args.top
         )
     except KeyboardInterrupt:
         print("\nScan interrupted by user")
@@ -169,14 +167,10 @@ def main():
         print(f"Error during scan: {e}")
         sys.exit(1)
 
-    # Get top N for each category
-    top_files = get_top_n_per_category(file_cats, top_n=args.top)
-    top_dirs = get_top_n_per_category(dir_cats, top_n=args.top)
-
     # Display results
     print("\nSCAN COMPLETE!")
     print(f"   Found {total_files:,} files")
-    print(f"   Found {sum(len(e) for e in dir_cats.values())} special directories")
+    print(f"   Found {sum(len(e) for e in top_dirs.values())} special directories")
     print(f"   Total size: {format_size(total_size)}")
 
     print_results(top_files, top_dirs, terminal_width)

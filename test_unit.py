@@ -6,8 +6,8 @@ import sys
 from zpace.core import (
     calculate_dir_size,
     categorize_extension,
-    get_top_n_per_category,
     identify_special_dir_name,
+    push_top_n,
     scan_files_and_dirs,
     is_skip_path,
 )
@@ -186,36 +186,48 @@ class TestCalculateDirSize:
         assert size == 0
 
 
-class TestGetTopNPerCategory:
-    """Test top N selection by category."""
+class TestPushTopN:
+    """Test the min-heap top-N helper function."""
 
-    def test_empty_categories(self):
-        result = get_top_n_per_category({})
-        assert result == {}
+    def test_heap_not_full_adds_item(self):
+        heap = []
+        push_top_n(heap, (100, "/a.txt"), 3)
+        push_top_n(heap, (200, "/b.txt"), 3)
+        assert len(heap) == 2
+        assert (100, "/a.txt") in heap
+        assert (200, "/b.txt") in heap
 
-    def test_single_category(self):
-        test_data = {
-            "Documents": [
-                (1000, "small.doc"),
-                (5000, "medium.doc"),
-                (3000, "middle.doc"),
-            ]
-        }
-        result = get_top_n_per_category(test_data, top_n=2)
-        assert len(result["Documents"]) == 2
-        assert result["Documents"][0][0] == 5000  # Largest first
-        assert result["Documents"][1][0] == 3000
+    def test_heap_full_rejects_smaller(self):
+        heap = [(100, "/a.txt"), (200, "/b.txt"), (300, "/c.txt")]
+        push_top_n(heap, (50, "/small.txt"), 3)
+        assert len(heap) == 3
+        assert (50, "/small.txt") not in heap
 
-    def test_multiple_categories(self):
-        test_data = {
-            "Documents": [(1000, "doc1.pdf"), (2000, "doc2.pdf")],
-            "Pictures": [(3000, "img1.jpg"), (4000, "img2.jpg")],
-        }
-        result = get_top_n_per_category(test_data, top_n=1)
-        assert len(result["Documents"]) == 1
-        assert len(result["Pictures"]) == 1
-        assert result["Documents"][0][0] == 2000
-        assert result["Pictures"][0][0] == 4000
+    def test_heap_full_accepts_larger(self):
+        heap = []
+        push_top_n(heap, (100, "/a.txt"), 3)
+        push_top_n(heap, (200, "/b.txt"), 3)
+        push_top_n(heap, (300, "/c.txt"), 3)
+        push_top_n(heap, (500, "/large.txt"), 3)
+        assert len(heap) == 3
+        assert (100, "/a.txt") not in heap
+        assert (500, "/large.txt") in heap
+
+    def test_heap_maintains_top_n_largest(self):
+        heap = []
+        sizes = [50, 300, 100, 500, 200, 400, 150]
+        for i, size in enumerate(sizes):
+            push_top_n(heap, (size, f"/{i}.txt"), 3)
+        sorted_heap = sorted(heap, reverse=True)
+        assert [s for s, _ in sorted_heap] == [500, 400, 300]
+
+    def test_heap_size_one(self):
+        heap = []
+        push_top_n(heap, (100, "/a.txt"), 1)
+        push_top_n(heap, (200, "/b.txt"), 1)
+        push_top_n(heap, (50, "/c.txt"), 1)
+        assert len(heap) == 1
+        assert heap[0] == (200, "/b.txt")
 
 
 class TestScanFilesAndDirs:
@@ -426,6 +438,56 @@ class TestScanFilesAndDirs:
         # Verify files above threshold are properly categorized
         # At least some files should be categorized
         assert len(file_cats) > 0
+
+    @patch("zpace.core.tqdm")
+    def test_top_n_limits_results_per_category(self, mock_tqdm, fs):
+        """Test that top_n limits results and returns largest items sorted descending."""
+        mock_pbar = MagicMock()
+        mock_tqdm.return_value.__enter__.return_value = mock_pbar
+
+        # Create 5 documents with varying sizes
+        fs.create_file("/test/doc1.pdf", contents="x" * (MIN_FILE_SIZE + 1000))
+        fs.create_file("/test/doc2.pdf", contents="x" * (MIN_FILE_SIZE + 5000))
+        fs.create_file("/test/doc3.pdf", contents="x" * (MIN_FILE_SIZE + 3000))
+        fs.create_file("/test/doc4.pdf", contents="x" * (MIN_FILE_SIZE + 4000))
+        fs.create_file("/test/doc5.pdf", contents="x" * (MIN_FILE_SIZE + 2000))
+
+        file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
+            Path("/test"), used_bytes=100000000, min_size=MIN_FILE_SIZE, top_n=2
+        )
+
+        # Should only have 2 documents (top_n=2)
+        assert len(file_cats["Documents"]) == 2
+        # Should be sorted descending (largest first)
+        sizes = [size for size, _ in file_cats["Documents"]]
+        assert sizes[0] > sizes[1]
+        # Should contain the two largest
+        assert sizes[0] >= MIN_FILE_SIZE + 4000
+        assert sizes[1] >= MIN_FILE_SIZE + 4000
+
+    @patch("zpace.core.tqdm")
+    def test_top_n_multiple_categories(self, mock_tqdm, fs):
+        """Test that top_n applies independently to each category."""
+        mock_pbar = MagicMock()
+        mock_tqdm.return_value.__enter__.return_value = mock_pbar
+
+        # Create files in multiple categories
+        fs.create_file("/test/doc1.pdf", contents="x" * (MIN_FILE_SIZE + 1000))
+        fs.create_file("/test/doc2.pdf", contents="x" * (MIN_FILE_SIZE + 2000))
+        fs.create_file("/test/img1.jpg", contents="x" * (MIN_FILE_SIZE + 3000))
+        fs.create_file("/test/img2.jpg", contents="x" * (MIN_FILE_SIZE + 4000))
+        fs.create_file("/test/img3.jpg", contents="x" * (MIN_FILE_SIZE + 5000))
+
+        file_cats, dir_cats, file_count, total_size = scan_files_and_dirs(
+            Path("/test"), used_bytes=100000000, min_size=MIN_FILE_SIZE, top_n=1
+        )
+
+        # Each category should have only 1 item (top_n=1)
+        assert len(file_cats["Documents"]) == 1
+        assert len(file_cats["Pictures"]) == 1
+        # Each should be the largest in its category
+        assert file_cats["Documents"][0][0] >= MIN_FILE_SIZE + 2000
+        assert file_cats["Pictures"][0][0] >= MIN_FILE_SIZE + 5000
 
     @pytest.mark.skipif(sys.platform == "win32", reason="Test specific to Unix-like systems")
     @patch("zpace.core.tqdm")

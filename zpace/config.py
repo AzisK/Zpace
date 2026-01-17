@@ -23,6 +23,9 @@ SKIP_DIRS: Set[str] = {
     "/.fseventsd",
 }
 
+# SKIP_DIRS contains only root-level system paths (e.g., /dev, /proc, /System).
+# We only check against SKIP_DIRS when level <= DEEPEST_SKIP_LEVEL as an optimization:
+# deeper scans (e.g., /home/user/project) can never encounter these paths.
 DEEPEST_SKIP_LEVEL = 3
 
 CATEGORIES = {

@@ -22,6 +22,14 @@ def categorize_extension(extension: str) -> str:
     return EXTENSION_MAP.get(extension.lower(), "Others")
 
 
+def push_top_n(heap: List[Tuple[int, str]], item: Tuple[int, str], n: int) -> None:
+    """Maintain a min-heap of size n with the largest items."""
+    if len(heap) < n:
+        heapq.heappush(heap, item)
+    elif item[0] > heap[0][0]:
+        heapq.heapreplace(heap, item)
+
+
 def is_skip_path(dirpath: str) -> bool:
     """Check if directory path should be skipped (system directories)."""
     return dirpath in SKIP_DIRS
@@ -69,14 +77,18 @@ def calculate_dir_size(dirpath: str) -> int:
 
 
 def scan_files_and_dirs(
-    root_path: Path, used_bytes: int, min_size: int = MIN_FILE_SIZE
+    root_path: Path,
+    used_bytes: int,
+    min_size: int = MIN_FILE_SIZE,
+    top_n: int = DEFAULT_TOP_N,
 ) -> Tuple[Dict[str, List[Tuple[int, str]]], Dict[str, List[Tuple[int, str]]], int, int]:
     """
     Scan directory tree for files and special directories using an iterative stack with os.scandir.
+    Uses min-heaps to keep only top_n largest items per category, reducing memory from O(files) to O(categories * top_n).
     Returns: (file_categories, dir_categories, total_files, total_size)
     """
-    file_categories = defaultdict(list)
-    dir_categories = defaultdict(list)
+    file_heaps: Dict[str, List[Tuple[int, str]]] = defaultdict(list)
+    dir_heaps: Dict[str, List[Tuple[int, str]]] = defaultdict(list)
     scanned_files = 0
     scanned_size = 0
     progress_update_buffer = 0
@@ -117,8 +129,9 @@ def scan_files_and_dirs(
                                     dir_size = calculate_dir_size(entry_path)
 
                                     if dir_size >= min_size:
-                                        # Storing string path instead of Path object
-                                        dir_categories[special_type].append((dir_size, entry_path))
+                                        push_top_n(
+                                            dir_heaps[special_type], (dir_size, entry_path), top_n
+                                        )
 
                                     scanned_size += dir_size
                                     progress_update_buffer += dir_size
@@ -139,7 +152,7 @@ def scan_files_and_dirs(
                                 if size >= min_size:
                                     _, ext = os.path.splitext(entry.name)
                                     category = categorize_extension(ext)
-                                    file_categories[category].append((size, entry.path))
+                                    push_top_n(file_heaps[category], (size, entry.path), top_n)
 
                                 scanned_files += 1
                                 scanned_size += size
@@ -163,15 +176,8 @@ def scan_files_and_dirs(
         if progress_update_buffer > 0:
             pbar.update(progress_update_buffer)
 
-    return dict(file_categories), dict(dir_categories), scanned_files, scanned_size
+    # Convert heaps to sorted lists (descending by size)
+    file_categories = {cat: sorted(heap, reverse=True) for cat, heap in file_heaps.items()}
+    dir_categories = {cat: sorted(heap, reverse=True) for cat, heap in dir_heaps.items()}
 
-
-def get_top_n_per_category(
-    categorized: Dict[str, List[Tuple[int, str]]], top_n: int = DEFAULT_TOP_N
-) -> Dict[str, List[Tuple[int, str]]]:
-    result = {}
-    for category, entries in categorized.items():
-        # Use heapq.nlargest for O(N log k) complexity instead of O(N log N)
-        top_entries = heapq.nlargest(top_n, entries, key=lambda x: x[0])
-        result[category] = top_entries
-    return result
+    return file_categories, dir_categories, scanned_files, scanned_size
