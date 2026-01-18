@@ -3,6 +3,8 @@
 [![PyPI version](https://img.shields.io/pypi/v/zpace?color=blue)](https://pypi.org/project/zpace/)
 [![Tests](https://github.com/AzisK/Zpace/actions/workflows/ci.yml/badge.svg)](https://github.com/AzisK/Zpace/actions/workflows/ci.yml)
 
+[Changelog](CHANGELOG.md) · [Architecture](ARCHITECTURE.md)
+
 A CLI tool to discover what's hogging your disk space!
 
 The tool shows the largest files in each category of files (videos, pictures, documents etc.) as well as the largest special directories as apps in MacOS, Python virtual environments, node_modules etc.
@@ -419,11 +421,6 @@ zpace/
 ├── README.md         # This file
 └── CHANGELOG.md      # Version history
 ```
-
-### Documentation
-
-- [CHANGELOG.md](CHANGELOG.md) - Version history and release notes
-- [ARCHITECTURE.md](ARCHITECTURE.md) - Technical architecture and design decisions
 
 ### Contributing
 Contributions are welcome! Please feel free to submit a Pull Request.
