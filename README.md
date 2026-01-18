@@ -420,6 +420,11 @@ zpace/
 └── CHANGELOG.md      # Version history
 ```
 
+### Documentation
+
+- [CHANGELOG.md](CHANGELOG.md) - Version history and release notes
+- [ARCHITECTURE.md](ARCHITECTURE.md) - Technical architecture and design decisions
+
 ### Contributing
 Contributions are welcome! Please feel free to submit a Pull Request.
 
