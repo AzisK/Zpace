@@ -184,7 +184,7 @@ SPECIAL_DIRS = {
     "IDE Config": {".idea", ".vscode", ".vs", ".eclipse", ".fleet"},
     "Git Repos": {".git"},
     "Temp Files": {"tmp", "temp", ".tmp"},
-    "ML Artifacts": {"models", "weights", "checkpoints", "pretrained"},
+    "ML Artifacts": {"weights", "checkpoints", "pretrained"},
 }
 
 # Pre-compute lookups for O(1) access
