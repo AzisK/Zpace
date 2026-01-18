@@ -54,9 +54,9 @@ class TestCategorizeExtension:
         assert categorize_extension(".gz") == "Archives"
         assert categorize_extension(".7z") == "Archives"
 
-    def test_json_yaml_extensions(self):
-        assert categorize_extension(".yml") == "JSON/YAML"
-        assert categorize_extension(".json") == "JSON/YAML"
+    def test_config_extensions(self):
+        assert categorize_extension(".yml") == "Config"
+        assert categorize_extension(".json") == "Config"
 
     def test_unknown_extension(self):
         assert categorize_extension(".xyz") == "Others"
@@ -358,7 +358,7 @@ class TestScanFilesAndDirs:
         assert "Pictures" in file_cats
         assert "Documents" in file_cats
         assert "Code" in file_cats
-        assert "JSON/YAML" in file_cats
+        assert "Config" in file_cats
 
         # Verify special directories were detected and categorized
         assert "Node Modules" in dir_cats
