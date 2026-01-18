@@ -71,6 +71,10 @@ class TestIdentifySpecialDirName:
         assert identify_special_dir_name(".venv") == "Virtual Environments"
         assert identify_special_dir_name("venv") == "Virtual Environments"
         assert identify_special_dir_name("env") == "Virtual Environments"
+        assert identify_special_dir_name("conda") == "Virtual Environments"
+        assert identify_special_dir_name(".conda") == "Virtual Environments"
+        assert identify_special_dir_name("miniconda3") == "Virtual Environments"
+        assert identify_special_dir_name("anaconda3") == "Virtual Environments"
 
     def test_node_modules(self):
         assert identify_special_dir_name("node_modules") == "Node Modules"
@@ -82,6 +86,12 @@ class TestIdentifySpecialDirName:
         assert identify_special_dir_name("target") == "Build Artifacts"
         assert identify_special_dir_name("build") == "Build Artifacts"
         assert identify_special_dir_name("dist") == "Build Artifacts"
+        assert identify_special_dir_name(".next") == "Build Artifacts"
+        assert identify_special_dir_name(".nuxt") == "Build Artifacts"
+        assert identify_special_dir_name(".svelte-kit") == "Build Artifacts"
+        assert identify_special_dir_name(".bazel") == "Build Artifacts"
+        assert identify_special_dir_name("bazel-bin") == "Build Artifacts"
+        assert identify_special_dir_name("bazel-out") == "Build Artifacts"
 
     def test_macos_apps(self):
         assert identify_special_dir_name("Safari.app") == "macOS Apps"
@@ -91,10 +101,25 @@ class TestIdentifySpecialDirName:
         assert identify_special_dir_name(".npm") == "Package Caches"
         assert identify_special_dir_name(".m2") == "Package Caches"
         assert identify_special_dir_name("__pycache__") == "Package Caches"
+        assert identify_special_dir_name(".bun") == "Package Caches"
+        assert identify_special_dir_name(".deno") == "Package Caches"
+        assert identify_special_dir_name(".pnpm") == "Package Caches"
+        assert identify_special_dir_name(".uv") == "Package Caches"
 
     def test_ide_config(self):
         assert identify_special_dir_name(".idea") == "IDE Config"
         assert identify_special_dir_name(".vscode") == "IDE Config"
+        assert identify_special_dir_name(".fleet") == "IDE Config"
+
+    def test_temp_files(self):
+        assert identify_special_dir_name("tmp") == "Temp Files"
+        assert identify_special_dir_name("temp") == "Temp Files"
+        assert identify_special_dir_name(".tmp") == "Temp Files"
+
+    def test_ml_artifacts(self):
+        assert identify_special_dir_name("weights") == "ML Artifacts"
+        assert identify_special_dir_name("checkpoints") == "ML Artifacts"
+        assert identify_special_dir_name("pretrained") == "ML Artifacts"
 
     def test_normal_directory(self):
         assert identify_special_dir_name("directory") is None
