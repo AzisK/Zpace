@@ -39,11 +39,16 @@ def identify_special_dir_name(dirname: str) -> Optional[str]:
     """
     Check if directory name indicates a special directory.
     """
-    # Check for macOS .app bundles
+    # Fast path: exact match (most common case)
+    result = SPECIAL_DIR_MAP.get(dirname.lower())
+    if result:
+        return result
+
+    # Slow path: pattern matching (Check for macOS .app bundles)
     if dirname.endswith(".app"):
         return "macOS Apps"
 
-    return SPECIAL_DIR_MAP.get(dirname.lower())
+    return None
 
 
 def calculate_dir_size(dirpath: str) -> int:
