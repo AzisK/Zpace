@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.3] - 2026-01-18
+
+### Configuration
+
+- File categories expanded:
+  - Renamed "JSON/YAML" category to "Config" and added .toml, .xml, .ini, .env, .conf
+  - Added new categories: "ML Models" (.pt, .onnx, .safetensors, etc.), "Databases" (.db, .sqlite, .parquet, .csv, etc.), "3D Models", "Executables", "Fonts"
+  - Extended existing categories: Pictures (.ico, .raw, .avif), Documents (.md, .epub, Apple iWork formats), Music (.opus, .aiff), Videos (.mts, .vob, .3gp), Code (.ipynb, shell scripts, .swift, .kt, .vue, .svelte), Archives (.zst), Disk Images (.qcow2, .vhdx)
+- Special directories expanded:
+  - Virtual Environments: Added Conda/Miniconda/Anaconda support
+  - Build Artifacts: Added .next, .nuxt, .svelte-kit, .turbo, Bazel directories
+  - Package Caches: Added .pnpm, .uv, .bun, .deno, vendor, .bundle
+  - IDE Config: Added .fleet (JetBrains Fleet)
+  - New categories: "Temp Files" (tmp, temp), "ML Artifacts" (weights, checkpoints, pretrained)
+
+### Performance
+
+- Optimized identify_special_dir_name with fast path for exact matches before pattern matching
+
+### Documentation
+
+- Added PyPI version badge to README
+- Added documentation section with links to Changelog and Architecture docs
+
 ## [0.4.2] - 2026-01-17
 
 ### Performance
