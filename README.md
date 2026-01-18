@@ -3,7 +3,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/zpace?color=blue)](https://pypi.org/project/zpace/)
 [![Tests](https://github.com/AzisK/Zpace/actions/workflows/ci.yml/badge.svg)](https://github.com/AzisK/Zpace/actions/workflows/ci.yml)
 
-[Changelog](CHANGELOG.md) · [Architecture](ARCHITECTURE.md)
+[Changelog](https://github.com/AzisK/Zpace/blob/main/CHANGELOG.md) · [Architecture](https://github.com/AzisK/Zpace/blob/main/ARCHITECTURE.md)
 
 A CLI tool to discover what's hogging your disk space!
 
@@ -426,7 +426,7 @@ zpace/
 Contributions are welcome! Please feel free to submit a Pull Request.
 
 ### License
-Apache 2.0 License - see [LICENSE](LICENSE.txt) for details.
+Apache 2.0 License - see [LICENSE](https://github.com/AzisK/Zpace/blob/main/LICENSE.txt) for details.
 
 ### Support
 
