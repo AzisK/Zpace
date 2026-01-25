@@ -1,7 +1,18 @@
-from typing import Set
+import sys
+from pathlib import Path
+from typing import Dict, Set
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    try:
+        import tomli as tomllib
+    except ImportError:
+        tomllib = None  # type: ignore[assignment]
 
 MIN_FILE_SIZE = 100 * 1024  # 100 KB
 DEFAULT_TOP_N = 10
+USER_CONFIG_PATH = Path.home() / ".zpace.toml"
 
 # Use strings for faster lookups (avoiding Path object creation overhead during checks)
 SKIP_DIRS: Set[str] = {
@@ -28,7 +39,7 @@ SKIP_DIRS: Set[str] = {
 # deeper scans (e.g., /home/user/project) can never encounter these paths.
 DEEPEST_SKIP_LEVEL = 3
 
-CATEGORIES = {
+DEFAULT_CATEGORIES: Dict[str, Set[str]] = {
     "Pictures": {
         ".jpg",
         ".jpeg",
@@ -135,7 +146,6 @@ CATEGORIES = {
     },
     "3D Models": {".obj", ".fbx", ".stl", ".blend", ".gltf", ".glb"},
     "Executables": {".exe", ".dll", ".so", ".dylib"},
-    "Fonts": {".ttf", ".otf", ".woff", ".woff2", ".eot"},
 }
 
 # Special directories to treat as atomic units
@@ -186,6 +196,40 @@ SPECIAL_DIRS = {
     "Temp Files": {"tmp", "temp", ".tmp"},
     "ML Artifacts": {"weights", "checkpoints", "pretrained"},
 }
+
+
+def load_user_config() -> Dict[str, Set[str]]:
+    """Load and merge user configuration from ~/.zpace.toml if it exists."""
+    categories = {cat: exts.copy() for cat, exts in DEFAULT_CATEGORIES.items()}
+
+    if not USER_CONFIG_PATH.exists():
+        return categories
+
+    if tomllib is None:
+        return categories
+
+    try:
+        with open(USER_CONFIG_PATH, "rb") as f:
+            user_config = tomllib.load(f)
+    except Exception:
+        return categories
+
+    user_categories = user_config.get("categories", {})
+    for cat_name, cat_config in user_categories.items():
+        if cat_name not in categories:
+            categories[cat_name] = set()
+
+        if "extensions" in cat_config:
+            categories[cat_name] = set(cat_config["extensions"])
+        if "add" in cat_config:
+            categories[cat_name].update(cat_config["add"])
+        if "remove" in cat_config:
+            categories[cat_name] -= set(cat_config["remove"])
+
+    return categories
+
+
+CATEGORIES = load_user_config()
 
 # Pre-compute lookups for O(1) access
 EXTENSION_MAP = {ext: cat for cat, exts in CATEGORIES.items() for ext in exts}

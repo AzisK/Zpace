@@ -3,8 +3,6 @@
 [![PyPI version](https://img.shields.io/pypi/v/zpace?color=blue)](https://pypi.org/project/zpace/)
 [![Tests](https://github.com/AzisK/Zpace/actions/workflows/ci.yml/badge.svg)](https://github.com/AzisK/Zpace/actions/workflows/ci.yml)
 
-[Changelog](https://github.com/AzisK/Zpace/blob/main/CHANGELOG.md) · [Architecture](https://github.com/AzisK/Zpace/blob/main/ARCHITECTURE.md)
-
 A CLI tool to discover what's hogging your disk space!
 
 The tool shows the largest files in each category of files (videos, pictures, documents etc.) as well as the largest special directories as apps in MacOS, Python virtual environments, node_modules etc.
@@ -337,6 +335,34 @@ Videos (10 files)
 ```
 </details>
 
+### Configuration
+
+Zpace can be customized via `~/.zpace.toml`. See [.zpace.toml.sample](.zpace.toml.sample) for a template:
+
+```bash
+cp .zpace.toml.sample ~/.zpace.toml
+```
+
+Example configuration:
+
+```toml
+# Add a Fonts category (not included by default)
+[categories.Fonts]
+extensions = [".ttf", ".otf", ".woff", ".woff2", ".eot"]
+
+# Add extensions to existing categories
+[categories.Code]
+add = [".sql", ".graphql"]
+
+# Remove extensions from categories
+[categories.Documents]
+remove = [".md"]
+
+# Create custom categories
+[categories."Design Files"]
+extensions = [".sketch", ".fig", ".xd", ".psd", ".ai"]
+```
+
 ### Tips
 
 ```bash
@@ -424,6 +450,10 @@ zpace/
 
 ### Contributing
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+### Docs
+- [Changelog](https://github.com/AzisK/Zpace/blob/main/CHANGELOG.md)
+- [Architecture](https://github.com/AzisK/Zpace/blob/main/ARCHITECTURE.md)
 
 ### License
 Apache 2.0 License - see [LICENSE](https://github.com/AzisK/Zpace/blob/main/LICENSE.txt) for details.

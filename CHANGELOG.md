@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.4] - 2026-01-25
+
+### Features
+
+- **User Configuration**: Added support for customizing file categories via `~/.zpace.toml`
+  - `extensions`: Replace all extensions for a category
+  - `add`: Add extensions to an existing category
+  - `remove`: Remove extensions from a category
+  - Create entirely new custom categories
+- Added `.zpace.toml.sample` template file
+
+### Configuration
+
+- Removed "Fonts" from default categories (can be re-added via user config)
+
+### Documentation
+
+- Added Configuration section to README with examples
+- Moved Changelog and Architecture links to new Docs section
+- Upgraded AGENTS.md file
+
 ## [0.4.3] - 2026-01-18
 
 ### Configuration

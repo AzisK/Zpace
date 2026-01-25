@@ -1,6 +1,6 @@
 [project]
 name = "zpace"
-version = "0.4.3"
+version = "0.4.4"
 description = "A CLI tool to discover what's consuming your disk space"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -30,6 +30,7 @@ classifiers = [
 dependencies = [
     "argparse>=1.4.0",
     "tqdm>=4.67.1",
+    "tomli>=2.0.0; python_version < '3.11'",
 ]
 
 [project.scripts]
