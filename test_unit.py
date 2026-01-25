@@ -13,7 +13,13 @@ from zpace.core import (
 )
 from zpace.utils import format_size
 from zpace.main import print_results, main
-from zpace.config import MIN_FILE_SIZE, SKIP_DIRS
+from zpace.config import (
+    MIN_FILE_SIZE,
+    SKIP_DIRS,
+    DEFAULT_CATEGORIES,
+    load_user_config,
+    USER_CONFIG_PATH,
+)
 from io import StringIO
 import os
 
@@ -757,6 +763,110 @@ class TestUnicodeHandling:
         assert "café.txt" in all_files
         assert "🚀.png" in all_files
         assert "こんにちは.doc" in all_files
+
+
+class TestLoadUserConfig:
+    """Test user configuration loading from ~/.zpace.toml."""
+
+    def test_returns_defaults_when_no_config_file(self, fs):
+        """When config file doesn't exist, return default categories."""
+        result = load_user_config()
+        assert result == DEFAULT_CATEGORIES
+
+    def test_returns_defaults_when_config_file_empty(self, fs):
+        """Empty config file should return defaults."""
+        fs.create_file(str(USER_CONFIG_PATH), contents="")
+        result = load_user_config()
+        assert result == DEFAULT_CATEGORIES
+
+    def test_extensions_replaces_category(self, fs):
+        """Using 'extensions' should replace all extensions in a category."""
+        config_content = """
+[categories.Pictures]
+extensions = [".custom1", ".custom2"]
+"""
+        fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
+        result = load_user_config()
+        assert result["Pictures"] == {".custom1", ".custom2"}
+        # Other categories should remain unchanged
+        assert result["Documents"] == DEFAULT_CATEGORIES["Documents"]
+
+    def test_add_extends_category(self, fs):
+        """Using 'add' should add extensions to existing category."""
+        config_content = """
+[categories.Code]
+add = [".sql", ".graphql"]
+"""
+        fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
+        result = load_user_config()
+        assert ".sql" in result["Code"]
+        assert ".graphql" in result["Code"]
+        assert ".py" in result["Code"]  # Original extension still present
+
+    def test_remove_removes_from_category(self, fs):
+        """Using 'remove' should remove extensions from category."""
+        config_content = """
+[categories.Documents]
+remove = [".md", ".txt"]
+"""
+        fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
+        result = load_user_config()
+        assert ".md" not in result["Documents"]
+        assert ".txt" not in result["Documents"]
+        assert ".pdf" in result["Documents"]  # Other extensions still present
+
+    def test_creates_new_custom_category(self, fs):
+        """Should be able to create entirely new categories."""
+        config_content = """
+[categories.Fonts]
+extensions = [".ttf", ".otf", ".woff"]
+"""
+        fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
+        result = load_user_config()
+        assert "Fonts" in result
+        assert result["Fonts"] == {".ttf", ".otf", ".woff"}
+
+    def test_add_to_new_category_creates_it(self, fs):
+        """Using 'add' on non-existent category should create it."""
+        config_content = """
+[categories.NewCategory]
+add = [".new1", ".new2"]
+"""
+        fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
+        result = load_user_config()
+        assert "NewCategory" in result
+        assert result["NewCategory"] == {".new1", ".new2"}
+
+    def test_combined_operations(self, fs):
+        """Test extensions + add + remove in same category."""
+        config_content = """
+[categories.TestCat]
+extensions = [".a", ".b", ".c"]
+add = [".d"]
+remove = [".b"]
+"""
+        fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
+        result = load_user_config()
+        # extensions sets base, add adds, remove removes
+        assert result["TestCat"] == {".a", ".c", ".d"}
+
+    def test_invalid_toml_returns_defaults(self, fs):
+        """Malformed TOML should return defaults gracefully."""
+        config_content = "this is not valid [ toml {"
+        fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
+        result = load_user_config()
+        assert result == DEFAULT_CATEGORIES
+
+    def test_does_not_mutate_default_categories(self, fs):
+        """Ensure loading config doesn't mutate DEFAULT_CATEGORIES."""
+        original_pictures = DEFAULT_CATEGORIES["Pictures"].copy()
+        config_content = """
+[categories.Pictures]
+extensions = [".custom"]
+"""
+        fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
+        load_user_config()
+        assert DEFAULT_CATEGORIES["Pictures"] == original_pictures
 
 
 if __name__ == "__main__":

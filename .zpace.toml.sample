@@ -1,0 +1,24 @@
+# Zpace Configuration File
+# Copy this file to ~/.zpace.toml to customize categories and extensions.
+#
+# Structure:
+#   [categories.<CategoryName>]
+#   extensions = [".ext1", ".ext2"]  # Replace all extensions for this category
+#   add = [".ext3"]                  # Add extensions to existing category
+#   remove = [".ext4"]               # Remove extensions from existing category
+
+# Example: Add a Fonts category (not included by default)
+[categories.Fonts]
+extensions = [".ttf", ".otf", ".woff", ".woff2", ".eot"]
+
+# Example: Add SQL files to the Code category
+# [categories.Code]
+# add = [".sql", ".graphql"]
+
+# Example: Remove markdown from Documents (if you prefer it in Code)
+# [categories.Documents]
+# remove = [".md"]
+
+# Example: Create a completely custom category
+# [categories."Design Files"]
+# extensions = [".sketch", ".fig", ".xd", ".psd", ".ai"]
