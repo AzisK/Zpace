@@ -149,7 +149,7 @@ DEFAULT_CATEGORIES: Dict[str, Set[str]] = {
 }
 
 # Special directories to treat as atomic units
-SPECIAL_DIRS = {
+DEFAULT_SPECIAL_DIRS: Dict[str, Set[str]] = {
     "Virtual Environments": {
         ".venv",
         "venv",
@@ -198,7 +198,7 @@ SPECIAL_DIRS = {
 }
 
 
-def load_user_config() -> Dict[str, Set[str]]:
+def load_user_categories_config() -> Dict[str, Set[str]]:
     """Load and merge user configuration from ~/.zpace.toml if it exists."""
     categories = {cat: exts.copy() for cat, exts in DEFAULT_CATEGORIES.items()}
 
@@ -229,7 +229,39 @@ def load_user_config() -> Dict[str, Set[str]]:
     return categories
 
 
-CATEGORIES = load_user_config()
+def load_user_dirs_config() -> Dict[str, Set[str]]:
+    """Load and merge user directory configuration from ~/.zpace.toml if it exists."""
+    dirs = {cat: names.copy() for cat, names in DEFAULT_SPECIAL_DIRS.items()}
+
+    if not USER_CONFIG_PATH.exists():
+        return dirs
+
+    if tomllib is None:
+        return dirs
+
+    try:
+        with open(USER_CONFIG_PATH, "rb") as f:
+            user_config = tomllib.load(f)
+    except Exception:
+        return dirs
+
+    user_dirs = user_config.get("directories", {})
+    for cat_name, cat_config in user_dirs.items():
+        if cat_name not in dirs:
+            dirs[cat_name] = set()
+
+        if "dirs" in cat_config:
+            dirs[cat_name] = set(cat_config["dirs"])
+        if "add" in cat_config:
+            dirs[cat_name].update(cat_config["add"])
+        if "remove" in cat_config:
+            dirs[cat_name] -= set(cat_config["remove"])
+
+    return dirs
+
+
+CATEGORIES = load_user_categories_config()
+SPECIAL_DIRS = load_user_dirs_config()
 
 # Pre-compute lookups for O(1) access
 EXTENSION_MAP = {ext: cat for cat, exts in CATEGORIES.items() for ext in exts}

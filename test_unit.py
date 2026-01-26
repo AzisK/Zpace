@@ -17,7 +17,7 @@ from zpace.config import (
     MIN_FILE_SIZE,
     SKIP_DIRS,
     DEFAULT_CATEGORIES,
-    load_user_config,
+    load_user_categories_config,
     USER_CONFIG_PATH,
 )
 from io import StringIO
@@ -765,18 +765,139 @@ class TestUnicodeHandling:
         assert "こんにちは.doc" in all_files
 
 
+class TestLoadUserDirsConfig:
+    """Test user directory configuration loading from ~/.zpace.toml."""
+
+    def test_returns_defaults_when_no_config_file(self, fs):
+        """When config file doesn't exist, return default special dirs."""
+        from zpace.config import load_user_dirs_config, DEFAULT_SPECIAL_DIRS
+
+        result = load_user_dirs_config()
+        assert result == DEFAULT_SPECIAL_DIRS
+
+    def test_returns_defaults_when_config_file_empty(self, fs):
+        """Empty config file should return defaults."""
+        from zpace.config import load_user_dirs_config, DEFAULT_SPECIAL_DIRS
+
+        fs.create_file(str(USER_CONFIG_PATH), contents="")
+        result = load_user_dirs_config()
+        assert result == DEFAULT_SPECIAL_DIRS
+
+    def test_dirs_replaces_category(self, fs):
+        """Using 'dirs' should replace all dirs in a category."""
+        from zpace.config import load_user_dirs_config
+
+        config_content = """
+[directories."Node Modules"]
+dirs = ["my_modules", "custom_modules"]
+"""
+        fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
+        result = load_user_dirs_config()
+        assert result["Node Modules"] == {"my_modules", "custom_modules"}
+
+    def test_add_extends_category(self, fs):
+        """Using 'add' should add dirs to existing category."""
+        from zpace.config import load_user_dirs_config
+
+        config_content = """
+[directories."Virtual Environments"]
+add = ["myenv", ".myenv"]
+"""
+        fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
+        result = load_user_dirs_config()
+        assert "myenv" in result["Virtual Environments"]
+        assert ".myenv" in result["Virtual Environments"]
+        assert ".venv" in result["Virtual Environments"]  # Original still present
+
+    def test_remove_removes_from_category(self, fs):
+        """Using 'remove' should remove dirs from category."""
+        from zpace.config import load_user_dirs_config
+
+        config_content = """
+[directories."Package Caches"]
+remove = ["vendor", ".cache"]
+"""
+        fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
+        result = load_user_dirs_config()
+        assert "vendor" not in result["Package Caches"]
+        assert ".cache" not in result["Package Caches"]
+        assert ".npm" in result["Package Caches"]  # Other dirs still present
+
+    def test_creates_new_custom_category(self, fs):
+        """Should be able to create entirely new directory categories."""
+        from zpace.config import load_user_dirs_config
+
+        config_content = """
+[directories."My Custom Dirs"]
+dirs = ["special_folder", "another_folder"]
+"""
+        fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
+        result = load_user_dirs_config()
+        assert "My Custom Dirs" in result
+        assert result["My Custom Dirs"] == {"special_folder", "another_folder"}
+
+    def test_add_to_new_category_creates_it(self, fs):
+        """Using 'add' on non-existent category should create it."""
+        from zpace.config import load_user_dirs_config
+
+        config_content = """
+[directories.NewDirCategory]
+add = ["new_dir1", "new_dir2"]
+"""
+        fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
+        result = load_user_dirs_config()
+        assert "NewDirCategory" in result
+        assert result["NewDirCategory"] == {"new_dir1", "new_dir2"}
+
+    def test_combined_operations(self, fs):
+        """Test dirs + add + remove in same category."""
+        from zpace.config import load_user_dirs_config
+
+        config_content = """
+[directories.TestDirCat]
+dirs = ["a", "b", "c"]
+add = ["d"]
+remove = ["b"]
+"""
+        fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
+        result = load_user_dirs_config()
+        assert result["TestDirCat"] == {"a", "c", "d"}
+
+    def test_invalid_toml_returns_defaults(self, fs):
+        """Malformed TOML should return defaults gracefully."""
+        from zpace.config import load_user_dirs_config, DEFAULT_SPECIAL_DIRS
+
+        config_content = "this is not valid [ toml {"
+        fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
+        result = load_user_dirs_config()
+        assert result == DEFAULT_SPECIAL_DIRS
+
+    def test_does_not_mutate_default_special_dirs(self, fs):
+        """Ensure loading config doesn't mutate DEFAULT_SPECIAL_DIRS."""
+        from zpace.config import load_user_dirs_config, DEFAULT_SPECIAL_DIRS
+
+        original_node_modules = DEFAULT_SPECIAL_DIRS["Node Modules"].copy()
+        config_content = """
+[directories."Node Modules"]
+dirs = ["custom"]
+"""
+        fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
+        load_user_dirs_config()
+        assert DEFAULT_SPECIAL_DIRS["Node Modules"] == original_node_modules
+
+
 class TestLoadUserConfig:
     """Test user configuration loading from ~/.zpace.toml."""
 
     def test_returns_defaults_when_no_config_file(self, fs):
         """When config file doesn't exist, return default categories."""
-        result = load_user_config()
+        result = load_user_categories_config()
         assert result == DEFAULT_CATEGORIES
 
     def test_returns_defaults_when_config_file_empty(self, fs):
         """Empty config file should return defaults."""
         fs.create_file(str(USER_CONFIG_PATH), contents="")
-        result = load_user_config()
+        result = load_user_categories_config()
         assert result == DEFAULT_CATEGORIES
 
     def test_extensions_replaces_category(self, fs):
@@ -786,7 +907,7 @@ class TestLoadUserConfig:
 extensions = [".custom1", ".custom2"]
 """
         fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
-        result = load_user_config()
+        result = load_user_categories_config()
         assert result["Pictures"] == {".custom1", ".custom2"}
         # Other categories should remain unchanged
         assert result["Documents"] == DEFAULT_CATEGORIES["Documents"]
@@ -798,7 +919,7 @@ extensions = [".custom1", ".custom2"]
 add = [".sql", ".graphql"]
 """
         fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
-        result = load_user_config()
+        result = load_user_categories_config()
         assert ".sql" in result["Code"]
         assert ".graphql" in result["Code"]
         assert ".py" in result["Code"]  # Original extension still present
@@ -810,7 +931,7 @@ add = [".sql", ".graphql"]
 remove = [".md", ".txt"]
 """
         fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
-        result = load_user_config()
+        result = load_user_categories_config()
         assert ".md" not in result["Documents"]
         assert ".txt" not in result["Documents"]
         assert ".pdf" in result["Documents"]  # Other extensions still present
@@ -822,7 +943,7 @@ remove = [".md", ".txt"]
 extensions = [".ttf", ".otf", ".woff"]
 """
         fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
-        result = load_user_config()
+        result = load_user_categories_config()
         assert "Fonts" in result
         assert result["Fonts"] == {".ttf", ".otf", ".woff"}
 
@@ -833,7 +954,7 @@ extensions = [".ttf", ".otf", ".woff"]
 add = [".new1", ".new2"]
 """
         fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
-        result = load_user_config()
+        result = load_user_categories_config()
         assert "NewCategory" in result
         assert result["NewCategory"] == {".new1", ".new2"}
 
@@ -846,7 +967,7 @@ add = [".d"]
 remove = [".b"]
 """
         fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
-        result = load_user_config()
+        result = load_user_categories_config()
         # extensions sets base, add adds, remove removes
         assert result["TestCat"] == {".a", ".c", ".d"}
 
@@ -854,7 +975,7 @@ remove = [".b"]
         """Malformed TOML should return defaults gracefully."""
         config_content = "this is not valid [ toml {"
         fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
-        result = load_user_config()
+        result = load_user_categories_config()
         assert result == DEFAULT_CATEGORIES
 
     def test_does_not_mutate_default_categories(self, fs):
@@ -865,7 +986,7 @@ remove = [".b"]
 extensions = [".custom"]
 """
         fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
-        load_user_config()
+        load_user_categories_config()
         assert DEFAULT_CATEGORIES["Pictures"] == original_pictures
 
 

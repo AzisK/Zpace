@@ -1,6 +1,7 @@
 # Zpace Configuration File
 # Copy this file to ~/.zpace.toml to customize categories and extensions.
 #
+# ===== FILE CATEGORIES =====
 # Structure:
 #   [categories.<CategoryName>]
 #   extensions = [".ext1", ".ext2"]  # Replace all extensions for this category
@@ -22,3 +23,22 @@ extensions = [".ttf", ".otf", ".woff", ".woff2", ".eot"]
 # Example: Create a completely custom category
 # [categories."Design Files"]
 # extensions = [".sketch", ".fig", ".xd", ".psd", ".ai"]
+
+# ===== DIRECTORY CATEGORIES =====
+# Structure:
+#   [directories.<CategoryName>]
+#   dirs = ["dir1", "dir2"]  # Replace all directory names for this category
+#   add = ["dir3"]           # Add directory names to existing category
+#   remove = ["dir4"]        # Remove directory names from existing category
+
+# Example: Add custom virtual environment names
+# [directories."Virtual Environments"]
+# add = ["myenv", ".myenv"]
+
+# Example: Add more build artifact directories
+# [directories."Build Artifacts"]
+# add = ["_build", ".output"]
+
+# Example: Create a custom directory category
+# [directories."Data Folders"]
+# dirs = ["datasets", "raw_data", "processed"]
