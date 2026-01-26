@@ -198,66 +198,47 @@ DEFAULT_SPECIAL_DIRS: Dict[str, Set[str]] = {
 }
 
 
-def load_user_categories_config() -> Dict[str, Set[str]]:
-    """Load and merge user configuration from ~/.zpace.toml if it exists."""
-    categories = {cat: exts.copy() for cat, exts in DEFAULT_CATEGORIES.items()}
+def _load_and_merge_config(
+    defaults: Dict[str, Set[str]], config_key: str, replace_key: str
+) -> Dict[str, Set[str]]:
+    """Load and merge user configuration from ~/.zpace.toml."""
+    result = {cat: items.copy() for cat, items in defaults.items()}
 
     if not USER_CONFIG_PATH.exists():
-        return categories
+        return result
 
     if tomllib is None:
-        return categories
+        return result
 
     try:
         with open(USER_CONFIG_PATH, "rb") as f:
             user_config = tomllib.load(f)
     except Exception:
-        return categories
+        return result
 
-    user_categories = user_config.get("categories", {})
-    for cat_name, cat_config in user_categories.items():
-        if cat_name not in categories:
-            categories[cat_name] = set()
+    user_items = user_config.get(config_key, {})
+    for cat_name, cat_config in user_items.items():
+        if cat_name not in result:
+            result[cat_name] = set()
 
-        if "extensions" in cat_config:
-            categories[cat_name] = set(cat_config["extensions"])
+        if replace_key in cat_config:
+            result[cat_name] = set(cat_config[replace_key])
         if "add" in cat_config:
-            categories[cat_name].update(cat_config["add"])
+            result[cat_name].update(cat_config["add"])
         if "remove" in cat_config:
-            categories[cat_name] -= set(cat_config["remove"])
+            result[cat_name] -= set(cat_config["remove"])
 
-    return categories
+    return result
+
+
+def load_user_categories_config() -> Dict[str, Set[str]]:
+    """Load and merge user file category configuration from ~/.zpace.toml."""
+    return _load_and_merge_config(DEFAULT_CATEGORIES, "categories", "extensions")
 
 
 def load_user_dirs_config() -> Dict[str, Set[str]]:
-    """Load and merge user directory configuration from ~/.zpace.toml if it exists."""
-    dirs = {cat: names.copy() for cat, names in DEFAULT_SPECIAL_DIRS.items()}
-
-    if not USER_CONFIG_PATH.exists():
-        return dirs
-
-    if tomllib is None:
-        return dirs
-
-    try:
-        with open(USER_CONFIG_PATH, "rb") as f:
-            user_config = tomllib.load(f)
-    except Exception:
-        return dirs
-
-    user_dirs = user_config.get("directories", {})
-    for cat_name, cat_config in user_dirs.items():
-        if cat_name not in dirs:
-            dirs[cat_name] = set()
-
-        if "dirs" in cat_config:
-            dirs[cat_name] = set(cat_config["dirs"])
-        if "add" in cat_config:
-            dirs[cat_name].update(cat_config["add"])
-        if "remove" in cat_config:
-            dirs[cat_name] -= set(cat_config["remove"])
-
-    return dirs
+    """Load and merge user directory configuration from ~/.zpace.toml."""
+    return _load_and_merge_config(DEFAULT_SPECIAL_DIRS, "directories", "dirs")
 
 
 CATEGORIES = load_user_categories_config()

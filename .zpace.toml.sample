@@ -39,6 +39,10 @@ extensions = [".ttf", ".otf", ".woff", ".woff2", ".eot"]
 # [directories."Build Artifacts"]
 # add = ["_build", ".output"]
 
+# Example: Remove directories from a category
+# [directories."Package Caches"]
+# remove = ["vendor", ".cache"]
+
 # Example: Create a custom directory category
 # [directories."Data Folders"]
 # dirs = ["datasets", "raw_data", "processed"]

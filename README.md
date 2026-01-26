@@ -378,6 +378,10 @@ add = ["myenv", ".myenv"]
 [directories."Build Artifacts"]
 add = ["_build", ".output"]
 
+# Remove directories from a category
+[directories."Package Caches"]
+remove = ["vendor", ".cache"]
+
 # Create a custom directory category
 [directories."Data Folders"]
 dirs = ["datasets", "raw_data", "processed"]
