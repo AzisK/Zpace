@@ -343,7 +343,9 @@ Zpace can be customized via `~/.zpace.toml`. See [.zpace.toml.sample](.zpace.tom
 cp .zpace.toml.sample ~/.zpace.toml
 ```
 
-Example configuration:
+#### File Categories
+
+Customize how files are grouped by extension:
 
 ```toml
 # Add a Fonts category (not included by default)
@@ -361,6 +363,28 @@ remove = [".md"]
 # Create custom categories
 [categories."Design Files"]
 extensions = [".sketch", ".fig", ".xd", ".psd", ".ai"]
+```
+
+#### Directory Categories
+
+Customize which directory names are treated as special directories:
+
+```toml
+# Add custom virtual environment names
+[directories."Virtual Environments"]
+add = ["myenv", ".myenv"]
+
+# Add more build artifact directories
+[directories."Build Artifacts"]
+add = ["_build", ".output"]
+
+# Remove directories from a category
+[directories."Package Caches"]
+remove = ["vendor", ".cache"]
+
+# Create a custom directory category
+[directories."Data Folders"]
+dirs = ["datasets", "raw_data", "processed"]
 ```
 
 ### Tips

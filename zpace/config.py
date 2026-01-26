@@ -149,7 +149,7 @@ DEFAULT_CATEGORIES: Dict[str, Set[str]] = {
 }
 
 # Special directories to treat as atomic units
-SPECIAL_DIRS = {
+DEFAULT_SPECIAL_DIRS: Dict[str, Set[str]] = {
     "Virtual Environments": {
         ".venv",
         "venv",
@@ -198,38 +198,51 @@ SPECIAL_DIRS = {
 }
 
 
-def load_user_config() -> Dict[str, Set[str]]:
-    """Load and merge user configuration from ~/.zpace.toml if it exists."""
-    categories = {cat: exts.copy() for cat, exts in DEFAULT_CATEGORIES.items()}
+def _load_and_merge_config(
+    defaults: Dict[str, Set[str]], config_key: str, replace_key: str
+) -> Dict[str, Set[str]]:
+    """Load and merge user configuration from ~/.zpace.toml."""
+    result = {cat: items.copy() for cat, items in defaults.items()}
 
     if not USER_CONFIG_PATH.exists():
-        return categories
+        return result
 
     if tomllib is None:
-        return categories
+        return result
 
     try:
         with open(USER_CONFIG_PATH, "rb") as f:
             user_config = tomllib.load(f)
     except Exception:
-        return categories
+        return result
 
-    user_categories = user_config.get("categories", {})
-    for cat_name, cat_config in user_categories.items():
-        if cat_name not in categories:
-            categories[cat_name] = set()
+    user_items = user_config.get(config_key, {})
+    for cat_name, cat_config in user_items.items():
+        if cat_name not in result:
+            result[cat_name] = set()
 
-        if "extensions" in cat_config:
-            categories[cat_name] = set(cat_config["extensions"])
+        if replace_key in cat_config:
+            result[cat_name] = set(cat_config[replace_key])
         if "add" in cat_config:
-            categories[cat_name].update(cat_config["add"])
+            result[cat_name].update(cat_config["add"])
         if "remove" in cat_config:
-            categories[cat_name] -= set(cat_config["remove"])
+            result[cat_name] -= set(cat_config["remove"])
 
-    return categories
+    return result
 
 
-CATEGORIES = load_user_config()
+def load_user_categories_config() -> Dict[str, Set[str]]:
+    """Load and merge user file category configuration from ~/.zpace.toml."""
+    return _load_and_merge_config(DEFAULT_CATEGORIES, "categories", "extensions")
+
+
+def load_user_dirs_config() -> Dict[str, Set[str]]:
+    """Load and merge user directory configuration from ~/.zpace.toml."""
+    return _load_and_merge_config(DEFAULT_SPECIAL_DIRS, "directories", "dirs")
+
+
+CATEGORIES = load_user_categories_config()
+SPECIAL_DIRS = load_user_dirs_config()
 
 # Pre-compute lookups for O(1) access
 EXTENSION_MAP = {ext: cat for cat, exts in CATEGORIES.items() for ext in exts}
