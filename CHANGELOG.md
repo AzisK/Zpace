@@ -8,6 +8,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Features
 
+- **Configuration**: Added `Homebrew` to Package Caches special directories
+
 - **Directory Configuration**: Added support for customizing directory categories via `~/.zpace.toml`
   - `dirs`: Replace all directory names for a category
   - `add`: Add directory names to an existing category

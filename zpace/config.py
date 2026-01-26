@@ -190,6 +190,7 @@ DEFAULT_SPECIAL_DIRS: Dict[str, Set[str]] = {
         ".bundle",
         ".bun",
         ".deno",
+        "homebrew",
     },
     "IDE Config": {".idea", ".vscode", ".vs", ".eclipse", ".fleet"},
     "Git Repos": {".git"},
