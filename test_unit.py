@@ -111,6 +111,7 @@ class TestIdentifySpecialDirName:
         assert identify_special_dir_name(".deno") == "Package Caches"
         assert identify_special_dir_name(".pnpm") == "Package Caches"
         assert identify_special_dir_name(".uv") == "Package Caches"
+        assert identify_special_dir_name("Homebrew") == "Package Caches"
 
     def test_ide_config(self):
         assert identify_special_dir_name(".idea") == "IDE Config"

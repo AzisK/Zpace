@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.4.5] - 2026-01-27
 
 ### Features
 
@@ -13,6 +13,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - `add`: Add directory names to an existing category
   - `remove`: Remove directory names from a category
   - Create entirely new custom directory categories
+
+### Configuration
+
+- Added `Homebrew` to Package Caches special directories
 
 ## [0.4.4] - 2026-01-25
 
