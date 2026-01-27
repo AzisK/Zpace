@@ -5,3 +5,10 @@ venv*
 __pycache__
 .idea
 .mypy_cache
+
+# macOS Xcode
+apps/macos/xcuserdata/
+apps/macos/Zpace.xcodeproj/xcuserdata/
+apps/macos/Zpace.xcodeproj/project.xcworkspace/xcuserdata/
+apps/macos/.build/
+apps/macos/.swiftpm/
