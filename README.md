@@ -1,7 +1,7 @@
 # Zpace
 
 [![PyPI version](https://img.shields.io/pypi/v/zpace?color=blue)](https://pypi.org/project/zpace/)
-[![Tests](https://github.com/AzisK/Zpace/actions/workflows/ci.yml/badge.svg)](https://github.com/AzisK/Zpace/actions/workflows/ci.yml)
+[![Tests](https://github.com/AzisK/Zpace/actions/workflows/tests.yml/badge.svg)](https://github.com/AzisK/Zpace/actions/workflows/tests.yml)
 
 A CLI tool to discover what's hogging your disk space!
 
