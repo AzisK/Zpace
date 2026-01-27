@@ -1,12 +1,59 @@
 # Zpace
 
-A CLI tool to discover what's hogging your disk space. See [ARCHITECTURE.md](ARCHITECTURE.md) for codebase structure.
+A tool to discover what's hogging your disk space.
+
+App documentation in this document is only for the CLI. Only the Project Structure section explains how this monorepo organizes other builds (MacOS and Windows).
+
+# Project Structure
+
+This is a **monorepo** with multiple apps sharing a common core:
+
+```
+zpace/
+├── zpace/              # Python CLI (current)
+├── apps/
+│   ├── macos/          # SwiftUI macOS app
+│   └── windows/        # WinUI 3 / .NET 10 Windows app
+└── core/               # (future) Rust core library
+```
+
+## App-Specific Context
+
+When working on a specific app, focus on that app's directory and conventions:
+
+| App | Language | Build Command | Notes |
+|-----|----------|---------------|-------|
+| CLI | Python | `uv run zpace` | Main app, TDD required |
+| macOS | Swift/SwiftUI | `cd apps/macos && swift run` | Requires Xcode for full .app bundle |
+| Windows | C#/.NET 10 | `dotnet build` | Requires VS 2026 + Windows |
+
+## macOS App Notes
+
+- Uses Xcode project (Zpace.xcodeproj) for proper .app bundle
+- Open in Xcode: `open apps/macos/Zpace.xcodeproj`
+- Build and run with Cmd+R in Xcode
+
+## Windows App Notes
+
+- Uses WinUI 3 with Windows App SDK 1.8
+- Requires Windows + Visual Studio 2026 to build
+- See `apps/windows/README.md` for setup
+
+## Future Architecture
+
+Long-term plan: Rust core library with FFI bindings to each frontend:
+- Swift calls Rust via C FFI for macOS
+- C# calls Rust via P/Invoke for Windows
+- Python calls Rust via PyO3 for CLI
 
 # Core Philosophy
 
 TEST-DRIVEN DEVELOPMENT IS NON-NEGOTIABLE. Every single line of production code must be written in response to a failing test. No exceptions.
 
 I follow Test-Driven Development (TDD) with a strong emphasis on behavior-driven testing and functional programming principles. All work should be done in small, incremental changes that maintain a working state throughout development.
+
+# Architecture
+See [ARCHITECTURE.md](ARCHITECTURE.md) for codebase structure.
 
 # Commands
 
