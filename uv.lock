@@ -522,6 +522,15 @@ dev = [
     { name = "ruff" },
     { name = "types-tqdm" },
 ]
+lint = [
+    { name = "mypy" },
+    { name = "types-tqdm" },
+]
+test = [
+    { name = "pyfakefs" },
+    { name = "pytest" },
+    { name = "ruff" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -538,4 +547,13 @@ dev = [
     { name = "pytest", specifier = ">=8.4.2" },
     { name = "ruff", specifier = ">=0.14.1" },
     { name = "types-tqdm", specifier = ">=4.67.0.20250809" },
+]
+lint = [
+    { name = "mypy", specifier = ">=1.18.2" },
+    { name = "types-tqdm", specifier = ">=4.67.0.20250809" },
+]
+test = [
+    { name = "pyfakefs", specifier = ">=5.10.2" },
+    { name = "pytest", specifier = ">=8.4.2" },
+    { name = "ruff", specifier = ">=0.14.1" },
 ]
