@@ -1,15 +1,15 @@
 ---
-name: CI
+name: Tests
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [main]
     paths-ignore:
-      - '**.md'
+      - "**.md"
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths-ignore:
-      - '**.md'
+      - "**.md"
 
 jobs:
   test:
@@ -20,44 +20,25 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-slim, macos-latest, windows-latest]
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14", "pypy3.9", "pypy3.10", "pypy3.11"]
+        python-version:
+          [
+            "3.9",
+            "3.10",
+            "3.11",
+            "3.12",
+            "3.13",
+            "3.14",
+            "pypy3.9",
+            "pypy3.10",
+            "pypy3.11",
+          ]
 
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v5
-
-    - name: Install uv
-      uses: astral-sh/setup-uv@v7
-      with:
-        enable-cache: true
-
-    - name: Set up Python ${{ matrix.python-version }}
-      run: uv python install ${{ matrix.python-version }}
-
-    - name: Install dependencies
-      run: uv sync
-
-    - name: Run tests
-      run: uv run pytest -v
-
-    - name: Run linter
-      run: uv run ruff check .
-
-    - name: Check formatting
-      run: uv run ruff format --check .
-
-    - name: Test CLI
-      run: |
-        uv run python main.py --help
-        uv run python main.py . -n 5 -m 1000
-
-  mypy:
-    name: Type Check
-    runs-on: ubuntu-slim
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
@@ -65,15 +46,45 @@ jobs:
           enable-cache: true
 
       - name: Install dependencies
-        run: uv sync
+        run: uv sync --no-default-groups --group test
+
+      - name: Run tests
+        run: uv run --no-sync pytest -v
+
+      - name: Run linter
+        run: uv run --no-sync ruff check .
+
+      - name: Check formatting
+        run: uv run --no-sync ruff format --check .
+
+      - name: Test CLI
+        run: |
+          uv run --no-sync python main.py --help
+          uv run --no-sync python main.py . -n 5 -m 1000
+
+  mypy:
+    name: Type Check
+    runs-on: ubuntu-slim
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --no-default-groups --group lint
 
       - name: Type check with mypy
-        run: uv run mypy .
+        run: uv run --no-sync mypy .
 
   post-dog:
     if: github.event_name == 'pull_request'
     name: Celebrate with a Dog!
-    needs: [test, mypy]  # Only run if `test` and `mypy` succeed
+    needs: [test, mypy] # Only run if `test` and `mypy` succeed
     runs-on: ubuntu-slim
 
     steps:

@@ -118,8 +118,11 @@ def main():
 
     print("\nDISK USAGE")
     print("=" * terminal_width)
-    print(f"  Free:  {format_size(free)} / {format_size(total)}")
-    print(f"  Used:  {format_size(used)} ({used / total * 100:.1f}%)")
+    if total > 0:
+        print(f"  Free:  {format_size(free)} / {format_size(total)}")
+        print(f"  Used:  {format_size(used)} ({used / total * 100:.1f}%)")
+    else:
+        print("  (disk usage unavailable on this platform)")
 
     # Check Trash size
     trash_path = get_trash_path()
