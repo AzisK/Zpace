@@ -28,7 +28,6 @@ classifiers = [
 ]
 
 dependencies = [
-    "argparse>=1.4.0",
     "tqdm>=4.67.1",
     "tomli>=2.0.0; python_version < '3.11'",
 ]

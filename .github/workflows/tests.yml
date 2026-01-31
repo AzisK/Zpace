@@ -46,7 +46,7 @@ jobs:
           enable-cache: true
 
       - name: Install dependencies
-        run: uv sync --only-group test
+        run: uv sync --no-default-groups --group test
 
       - name: Run tests
         run: uv run --no-sync pytest -v
@@ -76,7 +76,7 @@ jobs:
           enable-cache: true
 
       - name: Install dependencies
-        run: uv sync --only-group lint
+        run: uv sync --no-default-groups --group lint
 
       - name: Type check with mypy
         run: uv run --no-sync mypy .
