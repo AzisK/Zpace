@@ -63,5 +63,8 @@ indent-style = "space"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.mypy]
+exclude = ["test_.*\\.py$"]
+
 [tool.hatch.build.targets.wheel]
 include = ["zpace"]
