@@ -6,9 +6,26 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Tests
+### Fixed
 
-- Fixed flaky user config tests across Python versions by using local imports for pyfakefs compatibility
+- PyPy on Windows now works gracefully when `shutil.disk_usage` is unavailable (displays message instead of crashing)
+- Fixed flaky user config tests by reloading `zpace.config` module inside pyfakefs context
+
+### Changed
+
+- Dropped Python 3.8 support (already EOL since October 2024)
+- Removed `argparse` from dependencies (already in standard library)
+
+### CI/CD
+
+- Renamed workflows: `ci.yml` → `tests.yml`, `publish.yml` → `publish-pypi.yml`
+- Simplified PyPI publish using `uv build`/`uv publish` instead of pypa action
+- Switched to `ubuntu-slim` runners where Docker isn't needed
+- Replaced explicit Python install with `UV_PYTHON` env var
+- Updated `actions/checkout` to v6
+- Split dev dependencies into `test`, `lint`, and `dev` groups
+- Excluded test files from mypy type checking
+- Updated README badge URL
 
 ## [0.4.5] - 2026-01-27
 
