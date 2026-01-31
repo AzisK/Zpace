@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Tests
+
+- Fixed flaky user config tests across Python versions by using local imports for pyfakefs compatibility
+
 ## [0.4.5] - 2026-01-27
 
 ### Features

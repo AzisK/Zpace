@@ -16,9 +16,6 @@ from zpace.main import print_results, main
 from zpace.config import (
     MIN_FILE_SIZE,
     SKIP_DIRS,
-    DEFAULT_CATEGORIES,
-    load_user_categories_config,
-    USER_CONFIG_PATH,
 )
 from io import StringIO
 import os
@@ -778,7 +775,7 @@ class TestLoadUserDirsConfig:
 
     def test_returns_defaults_when_config_file_empty(self, fs):
         """Empty config file should return defaults."""
-        from zpace.config import load_user_dirs_config, DEFAULT_SPECIAL_DIRS
+        from zpace.config import load_user_dirs_config, DEFAULT_SPECIAL_DIRS, USER_CONFIG_PATH
 
         fs.create_file(str(USER_CONFIG_PATH), contents="")
         result = load_user_dirs_config()
@@ -786,7 +783,7 @@ class TestLoadUserDirsConfig:
 
     def test_dirs_replaces_category(self, fs):
         """Using 'dirs' should replace all dirs in a category."""
-        from zpace.config import load_user_dirs_config
+        from zpace.config import load_user_dirs_config, USER_CONFIG_PATH
 
         config_content = """
 [directories."Node Modules"]
@@ -798,7 +795,7 @@ dirs = ["my_modules", "custom_modules"]
 
     def test_add_extends_category(self, fs):
         """Using 'add' should add dirs to existing category."""
-        from zpace.config import load_user_dirs_config
+        from zpace.config import load_user_dirs_config, USER_CONFIG_PATH
 
         config_content = """
 [directories."Virtual Environments"]
@@ -812,7 +809,7 @@ add = ["myenv", ".myenv"]
 
     def test_remove_removes_from_category(self, fs):
         """Using 'remove' should remove dirs from category."""
-        from zpace.config import load_user_dirs_config
+        from zpace.config import load_user_dirs_config, USER_CONFIG_PATH
 
         config_content = """
 [directories."Package Caches"]
@@ -826,7 +823,7 @@ remove = ["vendor", ".cache"]
 
     def test_creates_new_custom_category(self, fs):
         """Should be able to create entirely new directory categories."""
-        from zpace.config import load_user_dirs_config
+        from zpace.config import load_user_dirs_config, USER_CONFIG_PATH
 
         config_content = """
 [directories."My Custom Dirs"]
@@ -839,7 +836,7 @@ dirs = ["special_folder", "another_folder"]
 
     def test_add_to_new_category_creates_it(self, fs):
         """Using 'add' on non-existent category should create it."""
-        from zpace.config import load_user_dirs_config
+        from zpace.config import load_user_dirs_config, USER_CONFIG_PATH
 
         config_content = """
 [directories.NewDirCategory]
@@ -852,7 +849,7 @@ add = ["new_dir1", "new_dir2"]
 
     def test_combined_operations(self, fs):
         """Test dirs + add + remove in same category."""
-        from zpace.config import load_user_dirs_config
+        from zpace.config import load_user_dirs_config, USER_CONFIG_PATH
 
         config_content = """
 [directories.TestDirCat]
@@ -866,7 +863,7 @@ remove = ["b"]
 
     def test_invalid_toml_returns_defaults(self, fs):
         """Malformed TOML should return defaults gracefully."""
-        from zpace.config import load_user_dirs_config, DEFAULT_SPECIAL_DIRS
+        from zpace.config import load_user_dirs_config, DEFAULT_SPECIAL_DIRS, USER_CONFIG_PATH
 
         config_content = "this is not valid [ toml {"
         fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
@@ -875,7 +872,7 @@ remove = ["b"]
 
     def test_does_not_mutate_default_special_dirs(self, fs):
         """Ensure loading config doesn't mutate DEFAULT_SPECIAL_DIRS."""
-        from zpace.config import load_user_dirs_config, DEFAULT_SPECIAL_DIRS
+        from zpace.config import load_user_dirs_config, DEFAULT_SPECIAL_DIRS, USER_CONFIG_PATH
 
         original_node_modules = DEFAULT_SPECIAL_DIRS["Node Modules"].copy()
         config_content = """
@@ -892,17 +889,31 @@ class TestLoadUserConfig:
 
     def test_returns_defaults_when_no_config_file(self, fs):
         """When config file doesn't exist, return default categories."""
+        from zpace.config import load_user_categories_config, DEFAULT_CATEGORIES
+
         result = load_user_categories_config()
         assert result == DEFAULT_CATEGORIES
 
     def test_returns_defaults_when_config_file_empty(self, fs):
         """Empty config file should return defaults."""
+        from zpace.config import (
+            load_user_categories_config,
+            DEFAULT_CATEGORIES,
+            USER_CONFIG_PATH,
+        )
+
         fs.create_file(str(USER_CONFIG_PATH), contents="")
         result = load_user_categories_config()
         assert result == DEFAULT_CATEGORIES
 
     def test_extensions_replaces_category(self, fs):
         """Using 'extensions' should replace all extensions in a category."""
+        from zpace.config import (
+            load_user_categories_config,
+            DEFAULT_CATEGORIES,
+            USER_CONFIG_PATH,
+        )
+
         config_content = """
 [categories.Pictures]
 extensions = [".custom1", ".custom2"]
@@ -915,6 +926,8 @@ extensions = [".custom1", ".custom2"]
 
     def test_add_extends_category(self, fs):
         """Using 'add' should add extensions to existing category."""
+        from zpace.config import load_user_categories_config, USER_CONFIG_PATH
+
         config_content = """
 [categories.Code]
 add = [".sql", ".graphql"]
@@ -927,6 +940,8 @@ add = [".sql", ".graphql"]
 
     def test_remove_removes_from_category(self, fs):
         """Using 'remove' should remove extensions from category."""
+        from zpace.config import load_user_categories_config, USER_CONFIG_PATH
+
         config_content = """
 [categories.Documents]
 remove = [".md", ".txt"]
@@ -939,6 +954,8 @@ remove = [".md", ".txt"]
 
     def test_creates_new_custom_category(self, fs):
         """Should be able to create entirely new categories."""
+        from zpace.config import load_user_categories_config, USER_CONFIG_PATH
+
         config_content = """
 [categories.Fonts]
 extensions = [".ttf", ".otf", ".woff"]
@@ -950,6 +967,8 @@ extensions = [".ttf", ".otf", ".woff"]
 
     def test_add_to_new_category_creates_it(self, fs):
         """Using 'add' on non-existent category should create it."""
+        from zpace.config import load_user_categories_config, USER_CONFIG_PATH
+
         config_content = """
 [categories.NewCategory]
 add = [".new1", ".new2"]
@@ -961,6 +980,8 @@ add = [".new1", ".new2"]
 
     def test_combined_operations(self, fs):
         """Test extensions + add + remove in same category."""
+        from zpace.config import load_user_categories_config, USER_CONFIG_PATH
+
         config_content = """
 [categories.TestCat]
 extensions = [".a", ".b", ".c"]
@@ -974,6 +995,12 @@ remove = [".b"]
 
     def test_invalid_toml_returns_defaults(self, fs):
         """Malformed TOML should return defaults gracefully."""
+        from zpace.config import (
+            load_user_categories_config,
+            DEFAULT_CATEGORIES,
+            USER_CONFIG_PATH,
+        )
+
         config_content = "this is not valid [ toml {"
         fs.create_file(str(USER_CONFIG_PATH), contents=config_content)
         result = load_user_categories_config()
@@ -981,6 +1008,12 @@ remove = [".b"]
 
     def test_does_not_mutate_default_categories(self, fs):
         """Ensure loading config doesn't mutate DEFAULT_CATEGORIES."""
+        from zpace.config import (
+            load_user_categories_config,
+            DEFAULT_CATEGORIES,
+            USER_CONFIG_PATH,
+        )
+
         original_pictures = DEFAULT_CATEGORIES["Pictures"].copy()
         config_content = """
 [categories.Pictures]
