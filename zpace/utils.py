@@ -6,8 +6,11 @@ from typing import Optional
 
 
 def get_disk_usage(path: str):
-    total, used, free = shutil.disk_usage(path)
-    return total, used, free
+    try:
+        total, used, free = shutil.disk_usage(path)
+        return total, used, free
+    except (AttributeError, OSError):
+        return 0, 0, 0
 
 
 def format_size(size: float) -> str:
