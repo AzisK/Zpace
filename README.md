@@ -76,6 +76,19 @@ zpace -m 1024
 
 # Combine options
 zpace ~/Documents -n 15 -m 500
+
+# (Unreleased)
+# Output can be piped to a text file
+zpace > zpace.txt
+
+# but it can also be saved to a file with an -o flag
+zpace -o zpace.txt
+
+# Output can also be formatted to JSON
+zpace --json
+
+# and save to a JSON file
+zpace --json -o zpace.json
 ```
 
 ### Example Output
@@ -335,6 +348,42 @@ Videos (10 files)
 ```
 </details>
 
+<details>
+<summary>Open JSON example output (unreleased)</summary>
+
+```json
+{
+  "version": "1.0",
+  "scan_path": "/Users/azis",
+  "timestamp": "2026-01-28T14:30:00Z",
+  "disk_usage": {
+    "total_bytes": 926350000000,
+    "used_bytes": 393340000000,
+    "free_bytes": 533010000000,
+    "used_percent": 42.5,
+    "trash_bytes": 310410000
+  },
+  "scan_summary": {
+    "total_files": 593044,
+    "special_directories": 420,
+    "total_size_bytes": 208580000000
+  },
+  "special_directories": {
+    "Node Modules": [
+      {"path": "/path/to/node_modules", "size_bytes": 1120000000}
+    ],
+    "Virtual Environments": [...]
+  },
+  "files_by_category": {
+    "Videos": [
+      {"path": "/path/to/video.mov", "size_bytes": 986900000}
+    ],
+    "Archives": [...]
+  }
+}
+```
+</details>
+
 ### Configuration
 
 Zpace can be customized via `~/.zpace.toml`. See [.zpace.toml.sample](.zpace.toml.sample) for a template:
@@ -463,6 +512,7 @@ zpace/
 │   ├── core.py
 │   ├── config.py
 │   └── utils.py
+|   └── output.py
 ├── main.py           # Entry point
 ├── pyproject.toml    # Project configuration
 ├── README.md         # This file
