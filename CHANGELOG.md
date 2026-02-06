@@ -6,6 +6,13 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-02-06
+
+### Features
+
+- **JSON Output**: Added `--json` flag to output scan results in structured JSON format
+- **File Output**: Added `-o` / `--output` flag to save results to a file (supports both text and JSON)
+
 ### Fixed
 
 - PyPy on Windows now works gracefully when `shutil.disk_usage` is unavailable (displays message instead of crashing)

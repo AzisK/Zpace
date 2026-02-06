@@ -7,7 +7,7 @@ A CLI tool to discover what's hogging your disk space!
 
 The tool shows the largest files in each category of files (videos, pictures, documents etc.) as well as the largest special directories as apps in MacOS, Python virtual environments, node_modules etc.
 
-It's built to indentify the biggest chunks of data that could potentially free up the space for something else.
+It's built to identify the biggest chunks of data that could potentially free up the space for something else.
 
 ## Features
 
@@ -71,24 +71,20 @@ zpace .
 # Show top 20 items per category (default: 10)
 zpace -n 20
 
-# Set minimum file size to 1MB (default: 100KB)
+# Set minimum file size to 1MB (default: 100KB, value is in KB)
 zpace -m 1024
 
 # Combine options
 zpace ~/Documents -n 15 -m 500
 
-# (Unreleased)
-# Output can be piped to a text file
-zpace > zpace.txt
+# Save results to a text file
+zpace -o results.txt
 
-# but it can also be saved to a file with an -o flag
-zpace -o zpace.txt
-
-# Output can also be formatted to JSON
+# Output in JSON format
 zpace --json
 
-# and save to a JSON file
-zpace --json -o zpace.json
+# Save JSON results to a file
+zpace --json -o results.json
 ```
 
 ### Example Output
@@ -349,7 +345,7 @@ Videos (10 files)
 </details>
 
 <details>
-<summary>Open JSON example output (unreleased)</summary>
+<summary>Open JSON example output</summary>
 
 ```json
 {
@@ -511,12 +507,14 @@ zpace/
 │   ├── main.py
 │   ├── core.py
 │   ├── config.py
-│   └── utils.py
-|   └── output.py
-├── main.py           # Entry point
-├── pyproject.toml    # Project configuration
-├── README.md         # This file
-└── CHANGELOG.md      # Version history
+│   ├── utils.py
+│   └── output.py
+├── main.py              # Entry point
+├── test_unit.py         # Unit tests
+├── test_integration.py  # Integration tests
+├── pyproject.toml       # Project configuration
+├── README.md            # This file
+└── CHANGELOG.md         # Version history
 ```
 
 ### Contributing

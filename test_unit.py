@@ -733,7 +733,12 @@ class TestSymlinkHandling:
                 pass
 
             mock_exit.assert_not_called()
-            mock_print.assert_any_call(f"Attention - you provided a symlink: {Path('/tmp/link')}")
+            expected_msg = (
+                f"Attention - you provided a symlink: {Path('/tmp/link')}\n"
+                f"It points to this directory: {Path('/real/path')}\n"
+                f"If you wish to analyse the symlinked directory, please pass its path: {Path('/real/path')}"
+            )
+            mock_print.assert_any_call(expected_msg)
 
 
 class TestUnicodeHandling:
@@ -1033,6 +1038,335 @@ extensions = [".custom"]
         fs_with_config.create_file(str(USER_CONFIG_PATH), contents=config_content)
         load_user_categories_config()
         assert DEFAULT_CATEGORIES["Pictures"] == original_pictures
+
+
+class TestScanResultToDict:
+    """Test ScanResult.to_dict() serialization."""
+
+    def test_minimal_scan_result(self):
+        from zpace.output import ScanResult
+
+        result = ScanResult(scan_path="/test", timestamp="2026-01-01T00:00:00Z")
+        d = result.to_dict()
+
+        assert d["version"] == "1.0"
+        assert d["scan_path"] == "/test"
+        assert d["timestamp"] == "2026-01-01T00:00:00Z"
+        assert d["special_directories"] == {}
+        assert d["files_by_category"] == {}
+        assert "disk_usage" not in d
+        assert "scan_summary" not in d
+
+    def test_full_scan_result(self):
+        from zpace.output import ScanResult, DiskUsage, ScanSummary, FileEntry
+
+        result = ScanResult(
+            scan_path="/home/user",
+            timestamp="2026-02-06T10:00:00Z",
+            disk_usage=DiskUsage(
+                total_bytes=1000000,
+                used_bytes=600000,
+                free_bytes=400000,
+                used_percent=60.0,
+                trash_bytes=5000,
+            ),
+            scan_summary=ScanSummary(
+                total_files=100,
+                special_directories_count=5,
+                total_size_bytes=500000,
+            ),
+            special_directories={
+                "Node Modules": [FileEntry(path="/project/node_modules", size_bytes=200000)]
+            },
+            files_by_category={"Videos": [FileEntry(path="/home/video.mp4", size_bytes=300000)]},
+        )
+        d = result.to_dict()
+
+        assert d["disk_usage"]["total_bytes"] == 1000000
+        assert d["disk_usage"]["used_percent"] == 60.0
+        assert d["disk_usage"]["trash_bytes"] == 5000
+        assert d["scan_summary"]["total_files"] == 100
+        assert d["scan_summary"]["special_directories_count"] == 5
+        assert len(d["special_directories"]["Node Modules"]) == 1
+        assert d["special_directories"]["Node Modules"][0]["path"] == "/project/node_modules"
+        assert len(d["files_by_category"]["Videos"]) == 1
+        assert d["files_by_category"]["Videos"][0]["size_bytes"] == 300000
+
+    def test_disk_usage_without_trash(self):
+        from zpace.output import ScanResult, DiskUsage
+
+        result = ScanResult(
+            scan_path="/test",
+            timestamp="2026-01-01T00:00:00Z",
+            disk_usage=DiskUsage(
+                total_bytes=1000, used_bytes=500, free_bytes=500, used_percent=50.0
+            ),
+        )
+        d = result.to_dict()
+
+        assert "trash_bytes" not in d["disk_usage"]
+
+    def test_categories_sorted_alphabetically(self):
+        from zpace.output import ScanResult, FileEntry
+
+        result = ScanResult(
+            scan_path="/test",
+            timestamp="2026-01-01T00:00:00Z",
+            special_directories={
+                "Zebra": [FileEntry(path="/z", size_bytes=1)],
+                "Apple": [FileEntry(path="/a", size_bytes=2)],
+            },
+            files_by_category={
+                "Videos": [FileEntry(path="/v", size_bytes=3)],
+                "Archives": [FileEntry(path="/ar", size_bytes=4)],
+            },
+        )
+        d = result.to_dict()
+
+        assert list(d["special_directories"].keys()) == ["Apple", "Zebra"]
+        assert list(d["files_by_category"].keys()) == ["Archives", "Videos"]
+
+
+class TestScanResultToJson:
+    """Test ScanResult.to_json() produces valid JSON."""
+
+    def test_produces_valid_json(self):
+        import json
+        from zpace.output import ScanResult, DiskUsage, ScanSummary, FileEntry
+
+        result = ScanResult(
+            scan_path="/home/user",
+            timestamp="2026-02-06T10:00:00Z",
+            disk_usage=DiskUsage(
+                total_bytes=1000000,
+                used_bytes=600000,
+                free_bytes=400000,
+                used_percent=60.0,
+            ),
+            scan_summary=ScanSummary(
+                total_files=50,
+                special_directories_count=3,
+                total_size_bytes=400000,
+            ),
+            files_by_category={"Documents": [FileEntry(path="/doc.pdf", size_bytes=10000)]},
+        )
+        json_str = result.to_json()
+        parsed = json.loads(json_str)
+
+        assert parsed["version"] == "1.0"
+        assert parsed["scan_path"] == "/home/user"
+        assert parsed["disk_usage"]["used_percent"] == 60.0
+
+    def test_json_roundtrip_preserves_data(self):
+        import json
+        from zpace.output import ScanResult, FileEntry
+
+        result = ScanResult(
+            scan_path="/test",
+            timestamp="2026-01-01T00:00:00Z",
+            files_by_category={
+                "Code": [
+                    FileEntry(path="/a.py", size_bytes=100),
+                    FileEntry(path="/b.js", size_bytes=200),
+                ]
+            },
+        )
+        parsed = json.loads(result.to_json())
+
+        assert len(parsed["files_by_category"]["Code"]) == 2
+        assert parsed["files_by_category"]["Code"][0]["path"] == "/a.py"
+        assert parsed["files_by_category"]["Code"][1]["path"] == "/b.js"
+
+
+class TestBuildScanResult:
+    """Test build_scan_result() factory function."""
+
+    def test_builds_from_raw_data(self):
+        from zpace.output import build_scan_result
+
+        result = build_scan_result(
+            scan_path="/home/user",
+            total=1000000.0,
+            used=600000.0,
+            free=400000.0,
+            trash_size=5000,
+            file_categories={"Documents": [(10000, "/doc.pdf")]},
+            dir_categories={"Node Modules": [(200000, "/project/node_modules")]},
+            total_files=50,
+            total_size=400000,
+        )
+
+        assert result.scan_path == "/home/user"
+        assert result.disk_usage is not None
+        assert result.disk_usage.total_bytes == 1000000
+        assert result.disk_usage.used_bytes == 600000
+        assert result.disk_usage.free_bytes == 400000
+        assert result.disk_usage.used_percent == 60.0
+        assert result.disk_usage.trash_bytes == 5000
+        assert result.scan_summary is not None
+        assert result.scan_summary.total_files == 50
+        assert result.scan_summary.special_directories_count == 1
+        assert result.scan_summary.total_size_bytes == 400000
+        assert len(result.special_directories["Node Modules"]) == 1
+        assert result.special_directories["Node Modules"][0].path == "/project/node_modules"
+        assert len(result.files_by_category["Documents"]) == 1
+        assert result.files_by_category["Documents"][0].size_bytes == 10000
+
+    def test_builds_without_trash(self):
+        from zpace.output import build_scan_result
+
+        result = build_scan_result(
+            scan_path="/test",
+            total=1000.0,
+            used=500.0,
+            free=500.0,
+            trash_size=None,
+            file_categories={},
+            dir_categories={},
+            total_files=0,
+            total_size=0,
+        )
+
+        assert result.disk_usage is not None
+        assert result.disk_usage.trash_bytes is None
+
+    def test_used_percent_with_zero_total(self):
+        from zpace.output import build_scan_result
+
+        result = build_scan_result(
+            scan_path="/test",
+            total=0.0,
+            used=0.0,
+            free=0.0,
+            trash_size=None,
+            file_categories={},
+            dir_categories={},
+            total_files=0,
+            total_size=0,
+        )
+
+        assert result.disk_usage is not None
+        assert result.disk_usage.used_percent == 0.0
+
+    def test_multiple_entries_per_category(self):
+        from zpace.output import build_scan_result
+
+        result = build_scan_result(
+            scan_path="/test",
+            total=1000.0,
+            used=500.0,
+            free=500.0,
+            trash_size=None,
+            file_categories={
+                "Videos": [(500000, "/v1.mp4"), (300000, "/v2.mp4")],
+                "Documents": [(100000, "/doc.pdf")],
+            },
+            dir_categories={
+                "Node Modules": [(200000, "/a/node_modules"), (100000, "/b/node_modules")],
+            },
+            total_files=3,
+            total_size=900000,
+        )
+
+        assert len(result.files_by_category["Videos"]) == 2
+        assert len(result.files_by_category["Documents"]) == 1
+        assert len(result.special_directories["Node Modules"]) == 2
+
+
+class TestMainJsonOutput:
+    """Test --json flag in main()."""
+
+    @patch("zpace.main.scan_files_and_dirs")
+    @patch("zpace.main.get_disk_usage")
+    def test_json_stdout(self, mock_disk, mock_scan):
+        import json
+
+        mock_disk.return_value = (1000000, 600000, 400000)
+        mock_scan.return_value = (
+            {"Documents": [(10000, "/doc.pdf")]},
+            {"Node Modules": [(200000, "/nm")]},
+            50,
+            400000,
+        )
+
+        with (
+            patch("sys.argv", ["main.py", "--json"]),
+            patch("pathlib.Path.exists", return_value=True),
+            patch("pathlib.Path.is_dir", return_value=True),
+            patch("pathlib.Path.is_symlink", return_value=False),
+            patch("sys.stdout", new=StringIO()) as fake_out,
+        ):
+            main()
+            output = fake_out.getvalue()
+            parsed = json.loads(output)
+
+            assert parsed["version"] == "1.0"
+            assert "disk_usage" in parsed
+            assert "scan_summary" in parsed
+            assert "Documents" in parsed["files_by_category"]
+            assert "Node Modules" in parsed["special_directories"]
+
+
+class TestMainFileOutput:
+    """Test -o flag in main()."""
+
+    @patch("zpace.main.scan_files_and_dirs")
+    @patch("zpace.main.get_disk_usage")
+    def test_text_file_output(self, mock_disk, mock_scan, tmp_path):
+        mock_disk.return_value = (1000000, 600000, 400000)
+        mock_scan.return_value = (
+            {"Documents": [(10000, "/doc.pdf")]},
+            {"Node Modules": [(200000, "/nm")]},
+            50,
+            400000,
+        )
+
+        output_file = str(tmp_path / "output.txt")
+
+        with (
+            patch("sys.argv", ["main.py", "-o", output_file]),
+            patch("pathlib.Path.exists", return_value=True),
+            patch("pathlib.Path.is_dir", return_value=True),
+            patch("pathlib.Path.is_symlink", return_value=False),
+        ):
+            main()
+
+        with open(output_file) as f:
+            content = f.read()
+
+        assert "DISK USAGE" in content
+        assert "SCAN PATH" in content
+        assert "Documents" in content
+        assert "Node Modules" in content
+
+    @patch("zpace.main.scan_files_and_dirs")
+    @patch("zpace.main.get_disk_usage")
+    def test_json_file_output(self, mock_disk, mock_scan, tmp_path):
+        import json
+
+        mock_disk.return_value = (1000000, 600000, 400000)
+        mock_scan.return_value = (
+            {"Documents": [(10000, "/doc.pdf")]},
+            {},
+            50,
+            400000,
+        )
+
+        output_file = str(tmp_path / "output.json")
+
+        with (
+            patch("sys.argv", ["main.py", "--json", "-o", output_file]),
+            patch("pathlib.Path.exists", return_value=True),
+            patch("pathlib.Path.is_dir", return_value=True),
+            patch("pathlib.Path.is_symlink", return_value=False),
+        ):
+            main()
+
+        with open(output_file) as f:
+            parsed = json.loads(f.read())
+
+        assert parsed["version"] == "1.0"
+        assert "Documents" in parsed["files_by_category"]
 
 
 if __name__ == "__main__":
