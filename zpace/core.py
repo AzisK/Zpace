@@ -83,9 +83,10 @@ def calculate_dir_size(dirpath: str) -> int:
 
 def scan_files_and_dirs(
     root_path: Path,
-    used_bytes: int,
+    used_bytes: float,
     min_size: int = MIN_FILE_SIZE,
     top_n: int = DEFAULT_TOP_N,
+    show_progress: bool = True,
 ) -> Tuple[Dict[str, List[Tuple[int, str]]], Dict[str, List[Tuple[int, str]]], int, int]:
     """
     Scan directory tree for files and special directories using an iterative stack with os.scandir.
@@ -105,7 +106,9 @@ def scan_files_and_dirs(
     # Pre-compute root level usage to skip logic if needed
     # We'll just check absolute paths for SKIP_DIRS
 
-    with tqdm(total=used_bytes, unit="B", unit_scale=True, desc="Scanning") as pbar:
+    with tqdm(
+        total=used_bytes, unit="B", unit_scale=True, desc="Scanning", disable=not show_progress
+    ) as pbar:
         while stack:
             current_path, level = stack.pop()
 
