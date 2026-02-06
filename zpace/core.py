@@ -106,7 +106,9 @@ def scan_files_and_dirs(
     # Pre-compute root level usage to skip logic if needed
     # We'll just check absolute paths for SKIP_DIRS
 
-    with tqdm(total=used_bytes, unit="B", unit_scale=True, desc="Scanning", disable=not show_progress) as pbar:
+    with tqdm(
+        total=used_bytes, unit="B", unit_scale=True, desc="Scanning", disable=not show_progress
+    ) as pbar:
         while stack:
             current_path, level = stack.pop()
 
