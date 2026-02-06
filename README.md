@@ -499,24 +499,6 @@ uv run pytest test_unit.py -v
 uv run pytest test_integration.py -v
 ```
 
-### Project Structure
-```
-zpace/
-├── zpace/
-│   ├── __init__.py
-│   ├── main.py
-│   ├── core.py
-│   ├── config.py
-│   ├── utils.py
-│   └── output.py
-├── main.py              # Entry point
-├── test_unit.py         # Unit tests
-├── test_integration.py  # Integration tests
-├── pyproject.toml       # Project configuration
-├── README.md            # This file
-└── CHANGELOG.md         # Version history
-```
-
 ### Contributing
 Contributions are welcome! Please feel free to submit a Pull Request.
 

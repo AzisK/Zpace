@@ -33,6 +33,29 @@ The tool uses an iterative, stack-based, depth-first search approach with `os.sc
 - **`push_top_n(heap, item, n)` in `zpace/core.py`**: Maintains a min-heap of size `n` with the largest items. Used during scanning to keep only the top N files/directories per category without storing all matches.
 - **`main()` in `zpace/main.py`**: Handles command-line argument parsing and orchestrates the scanning and printing of results.
 
+## Project Structure
+
+```
+zpace/
+├── zpace/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── core.py
+│   ├── config.py
+│   ├── utils.py
+│   └── output.py
+├── apps/
+│   ├── macos/          # SwiftUI macOS app
+│   └── windows/        # WinUI 3 / .NET 10 Windows app
+├── main.py              # Entry point
+├── test_unit.py         # Unit tests
+├── test_integration.py  # Integration tests
+├── pyproject.toml       # Project configuration
+├── README.md
+├── ARCHITECTURE.md      # This file
+└── CHANGELOG.md         # Version history
+```
+
 ## Configuration
 
 Configuration is primarily handled via global constants in `zpace/config.py`:
