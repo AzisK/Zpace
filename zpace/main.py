@@ -227,7 +227,7 @@ def main():
         import io
 
         buffer = io.StringIO()
-        buffer.write(f"DISK USAGE\n")
+        buffer.write("DISK USAGE\n")
         buffer.write("=" * 80 + "\n")
         buffer.write(f"  Free:  {format_size(free)} / {format_size(total)}\n")
         buffer.write(f"  Used:  {format_size(used)} ({used / total * 100:.1f}%)\n")
