@@ -452,6 +452,7 @@ sudo zpace / -n 20
 brew cleanup
 
 # Prune docker
+docker builder prune
 docker system prune
 
 # Prune yarn cache
