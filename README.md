@@ -432,7 +432,7 @@ remove = ["vendor", ".cache"]
 dirs = ["datasets", "raw_data", "processed"]
 ```
 
-### Tips
+### Usage Tips
 
 ```bash
 # Find all node_modules directories
@@ -443,6 +443,22 @@ zpace ~/.cache
 
 # Find largest files system-wide (requires sudo)
 sudo zpace / -n 20
+```
+
+### Disk Storage Pruning Tips
+
+```bash
+# Prune brew cache
+brew cleanup
+
+# Prune docker
+docker system prune
+
+# Prune yarn cache
+yarn cache clean
+
+# Prune npm cache
+npm cache clean
 ```
 
 ### macOS Permissions
