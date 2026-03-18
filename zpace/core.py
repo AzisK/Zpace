@@ -1,5 +1,5 @@
-import os
 import heapq
+import os
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -8,12 +8,12 @@ from tqdm import tqdm
 
 from zpace.config import (
     DEEPEST_SKIP_LEVEL,
+    DEFAULT_TOP_N,
     EXTENSION_MAP,
     MIN_FILE_SIZE,
     PROGRESS_UPDATE_THRESHOLD,
     SKIP_DIRS,
     SPECIAL_DIR_MAP,
-    DEFAULT_TOP_N,
 )
 
 
