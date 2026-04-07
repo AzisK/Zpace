@@ -25,6 +25,8 @@ It's built to identify the biggest chunks of data that could potentially free up
 ```bash
 brew tap AzisK/zpace
 brew install zpace
+# or
+brew install AzisK/zpace/zpace
 ```
 
 ### Windows (Scoop)
@@ -515,6 +517,13 @@ uv run pytest test_unit.py -v
 # Run integration tests only
 uv run pytest test_integration.py -v
 ```
+
+### Package Managers
+
+The GitHub hosted repos for MacOS, Linux and Windows package managers can be found below:
+
+- Homebrew https://github.com/AzisK/homebrew-zpace
+- Scoop https://github.com/AzisK/scoop-zpace
 
 ### Contributing
 Contributions are welcome! Please feel free to submit a Pull Request.
