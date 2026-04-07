@@ -1,11 +1,21 @@
-.ruff_cache
+# venv
 .venv*
 venv*
+
+# cache
+.ruff_cache
 .pytest_cache
 __pycache__
-.idea
 .mypy_cache
+
+# ide
+.idea
+
+# Local setings
 .claude/settings*.json
+
+# Scan results
+results.*.json
 
 # macOS Xcode
 apps/macos/xcuserdata/
