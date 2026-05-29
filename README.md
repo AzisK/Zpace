@@ -492,6 +492,9 @@ uv run zpace
 The project uses Ruff for linting, formatting, and import sorting:
 
 ```bash
+# Check code formatting
+uv run ruff format --check
+
 # Format code
 uv run ruff format
 
@@ -501,9 +504,25 @@ uv run ruff check
 # Fix auto-fixable issues
 uv run ruff check --fix
 
-# Run all pre-commit checks manually
-uv run pre-commit run --all-files
+# Run all pre-commit hooks manually
+prek run --all-files
 ```
+
+### Git Hooks (prek)
+
+This project uses [prek](https://github.com/j178/prek) (a fast pre-commit hook runner) to enforce code quality on commit. Install it globally:
+
+```bash
+uv tool install prek
+```
+
+Then enable the hooks:
+
+```bash
+prek install
+```
+
+Hooks run automatically on `git commit` to catch issues early.
 
 ### Testing
 

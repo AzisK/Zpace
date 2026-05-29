@@ -48,7 +48,6 @@ lint = [
 dev = [
     {include-group = "test"},
     {include-group = "lint"},
-    "pre-commit>=4.3.0",
 ]
 
 [tool.ruff]
